@@ -1,6 +1,6 @@
-import { SYMPTOM_CATEGORIES, RED_FLAGS, GUM_COLORS } from '../data/clinicalData.js';
+import { SYMPTOM_CATEGORIES, RED_FLAGS, GUM_COLORS, SPECIES_LIST, SPECIES_CARE_GUIDES, getSpeciesLabel } from '../data/clinicalData.js';
 import { escapeHtml } from '../state/store.js';
-import { icon } from '../utils/icons.js';
+import { icon, speciesIcon } from '../utils/icons.js';
 
 export function renderTriageView(state, activePet) {
   const { lang, triageDraft } = state;
@@ -10,7 +10,9 @@ export function renderTriageView(state, activePet) {
 
   const selectedChipsCount = triageDraft.selectedSymptoms.length + triageDraft.redFlags.length;
   const nextRem = (activePet.reminders || [])[0];
-  const petIcon = activePet.species === 'dog' ? icon('dog', 16) : icon('cat', 16);
+  const petIcon = speciesIcon(activePet.species, 16);
+  const spLabel = getSpeciesLabel(activePet.species, lang);
+  const guideSpecies = state.careGuideSpecies || activePet.species || 'dog';
 
   return `
     <section class="page-section" aria-labelledby="triage-heading">
@@ -18,7 +20,7 @@ export function renderTriageView(state, activePet) {
         <div>
           <div style="display:flex; align-items:center; gap:6px; font-size:0.8rem; font-weight:700; color:var(--primary); text-transform:uppercase; letter-spacing:0.04em;">
             ${petIcon}
-            <span>${escapeHtml(activePet.name)} · ${escapeHtml(activePet.weightKg)} kg · ${escapeHtml(activePet.ageYears)} ${isEs ? 'años' : 'yrs'}</span>
+            <span>${escapeHtml(activePet.name)} · ${escapeHtml(spLabel)} · ${escapeHtml(activePet.weightKg)} kg · ${escapeHtml(activePet.ageYears)} ${isEs ? 'años' : 'yrs'}</span>
           </div>
           <div style="display:flex; align-items:center; gap:6px; font-size:0.86rem; color:var(--text-secondary); margin-top:3px;">
             ${icon('clock', 14)}
@@ -257,7 +259,82 @@ export function renderTriageView(state, activePet) {
           ${renderTriageResult(triageDraft.result, lang)}
         </aside>
       </div>
+
+      ${renderSpeciesCareGuide(guideSpecies, lang)}
     </section>
+  `;
+}
+
+function renderSpeciesCareGuide(guideSpecies, lang) {
+  const isEs = lang === 'es';
+  const spMeta = SPECIES_LIST.find((s) => s.id === guideSpecies) || SPECIES_LIST[0];
+  const guide = SPECIES_CARE_GUIDES[spMeta.id] || SPECIES_CARE_GUIDES.dog;
+
+  return `
+    <div id="species-care-guide" class="card" style="margin-top:18px;">
+      <div class="card-title" style="justify-content:space-between; flex-wrap:wrap; gap:10px;">
+        <span style="display:flex; align-items:center; gap:8px;">
+          ${speciesIcon(spMeta.id, 18)}
+          <span>${isEs ? 'Ayudas y Cómo Curar por Especie' : 'Species-Specific Care & Treatment Guide'}</span>
+        </span>
+        <span style="font-size:0.78rem; font-weight:600; color:var(--text-secondary);">
+          ${isEs ? 'Constantes normales:' : 'Normal vitals:'} ${escapeHtml(spMeta.normalTemp)} · ${escapeHtml(spMeta.normalRpm)}
+        </span>
+      </div>
+
+      <div class="category-tabs" style="margin-bottom:14px;">
+        ${SPECIES_LIST.map(
+          (sp) => `
+          <button
+            type="button"
+            id="guide-sp-${sp.id}"
+            class="cat-pill ${sp.id === spMeta.id ? 'active' : ''}"
+            data-action="select-care-species"
+            data-species="${sp.id}"
+          >
+            ${speciesIcon(sp.id, 15)}
+            <span>${escapeHtml(sp.label[lang])}</span>
+          </button>
+        `
+        ).join('')}
+      </div>
+
+      <p style="font-size:0.9rem; color:var(--text-secondary); margin:0 0 14px;">
+        ${escapeHtml(guide.summary[lang])}
+      </p>
+
+      <div class="grid-2" style="margin-bottom:14px;">
+        ${guide.conditions
+          .map(
+            (cond) => `
+          <div style="padding:12px 14px; border-radius:var(--radius-sm); border:1px solid var(--border-subtle); background:var(--surface-elevated, var(--bg));">
+            <div style="font-weight:700; font-size:0.92rem; margin-bottom:6px; color:var(--primary);">
+              ${escapeHtml(cond.title[lang])}
+            </div>
+            <div style="font-size:0.86rem; color:var(--text-secondary); line-height:1.45;">
+              ${escapeHtml(cond.cure[lang])}
+            </div>
+          </div>
+        `
+          )
+          .join('')}
+      </div>
+
+      <div class="result-lists">
+        <div class="result-box">
+          <h4>${icon('check', 15)} <span>${isEs ? 'Cuidados seguros en casa' : 'Safe home stabilization'}</span></h4>
+          <ul>
+            ${guide.homeCare[lang].map((item) => `<li>${escapeHtml(item)}</li>`).join('')}
+          </ul>
+        </div>
+        <div class="result-box">
+          <h4>${icon('ban', 15)} <span>${isEs ? 'Peligros / Qué evitar' : 'Dangers / What to avoid'}</span></h4>
+          <p style="margin:0; font-size:0.86rem; color:var(--text-secondary); line-height:1.45;">
+            ${escapeHtml(guide.avoid[lang])}
+          </p>
+        </div>
+      </div>
+    </div>
   `;
 }
 

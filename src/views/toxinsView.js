@@ -1,4 +1,4 @@
-import { TOXINS_DB, FOOD_PLANT_GUIDE } from '../data/clinicalData.js';
+import { TOXINS_DB, FOOD_PLANT_GUIDE, getSpeciesLabel } from '../data/clinicalData.js';
 import { escapeHtml } from '../state/store.js';
 import { icon } from '../utils/icons.js';
 
@@ -15,14 +15,16 @@ export function renderToxinsView(state, activePet) {
     return matchCat && matchQuery;
   });
 
+  const spLabel = getSpeciesLabel(activePet.species, lang);
+
   return `
     <section class="page-section" aria-labelledby="toxins-heading">
       <div class="page-header">
         <h1 id="toxins-heading">${isEs ? 'Calculadora de Tóxicos y Guía Segura' : 'Toxin Calculator & Safety Guide'}</h1>
         <p>${
           isEs
-            ? `Cálculo por peso para <strong>${escapeHtml(activePet.name)}</strong> (${escapeHtml(activePet.weightKg)} kg — ${activePet.species === 'dog' ? 'Perro' : 'Gato'}).`
-            : `Weight-based check for <strong>${escapeHtml(activePet.name)}</strong> (${escapeHtml(activePet.weightKg)} kg — ${activePet.species === 'dog' ? 'Dog' : 'Cat'}).`
+            ? `Cálculo por peso para <strong>${escapeHtml(activePet.name)}</strong> (${escapeHtml(activePet.weightKg)} kg — ${escapeHtml(spLabel)}).`
+            : `Weight-based check for <strong>${escapeHtml(activePet.name)}</strong> (${escapeHtml(activePet.weightKg)} kg — ${escapeHtml(spLabel)}).`
         }</p>
       </div>
 

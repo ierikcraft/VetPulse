@@ -1,6 +1,7 @@
 // Application state & localStorage persistence
 
 const STORAGE_KEY = 'vetpulse_state_v2';
+export const MAX_PETS = 5;
 
 export function escapeHtml(str) {
   return String(str ?? '')

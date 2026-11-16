@@ -1,5 +1,250 @@
 // Clinical triage rules, vitals evaluator, food/plant guide, toxin calculator, first-aid guides, cost estimator, and ES/EN i18n
 
+export const SPECIES_LIST = [
+  { id: 'dog', label: { es: 'Perro', en: 'Dog' }, defaultBreed: { es: 'Mestizo', en: 'Mixed breed' }, normalTemp: '38.0–39.2°C', normalRpm: '15–30 RPM' },
+  { id: 'cat', label: { es: 'Gato', en: 'Cat' }, defaultBreed: { es: 'Común Europeo', en: 'Domestic Shorthair' }, normalTemp: '38.0–39.2°C', normalRpm: '20–30 RPM' },
+  { id: 'rabbit', label: { es: 'Conejo', en: 'Rabbit' }, defaultBreed: { es: 'Belier / Enano', en: 'Lop / Dwarf' }, normalTemp: '38.5–40.0°C', normalRpm: '30–60 RPM' },
+  { id: 'bird', label: { es: 'Ave / Pájaro', en: 'Bird' }, defaultBreed: { es: 'Agapornis / Periquito', en: 'Parakeet / Lovebird' }, normalTemp: '40.0–42.0°C', normalRpm: '40–60 RPM' },
+  { id: 'rodent', label: { es: 'Roedor (Cobaya/Hámster)', en: 'Rodent (Guinea Pig/Hamster)' }, defaultBreed: { es: 'Cobaya / Hámster', en: 'Guinea Pig / Hamster' }, normalTemp: '37.2–39.5°C', normalRpm: '60–110 RPM' },
+  { id: 'reptile', label: { es: 'Reptil / Tortuga', en: 'Reptile / Turtle' }, defaultBreed: { es: 'Tortuga / Gecko', en: 'Turtle / Gecko' }, normalTemp: '24–32°C (amb)', normalRpm: '4–12 RPM' },
+];
+
+export function getSpeciesLabel(species, lang = 'es') {
+  const found = SPECIES_LIST.find((s) => s.id === species);
+  return found ? (found.label[lang] || found.label.es) : (lang === 'es' ? 'Mascota' : 'Pet');
+}
+
+export const SPECIES_CARE_GUIDES = {
+  dog: {
+    summary: {
+      es: 'En perros, las urgencias más graves son la torsión gástrica (abdomen duro + arcadas), intoxicaciones y golpe de calor.',
+      en: 'In dogs, top emergencies include gastric bloat/torsion (hard belly + dry heaving), poisoning, and heatstroke.',
+    },
+    conditions: [
+      {
+        title: { es: 'Gastroenteritis / Vómitos leves', en: 'Mild GI upset / Vomiting' },
+        cure: {
+          es: 'Ayuno corto de agua/comida 4–6h si solo vomitó 1 vez y está activo; luego agua en sorbos pequeños y dieta blanda (arroz blanco y pollo cocido sin piel ni sal). Si vomita >3 veces o hay sangre, requiere antiemético inyectable y suero veterinario.',
+          en: 'Short 4–6h rest after 1 isolated vomit if alert; then small sips of water and bland diet (boiled white rice & plain chicken). >3 vomits or blood requires injectable vet anti-nausea and fluids.',
+        },
+      },
+      {
+        title: { es: 'Heridas superficiales y cojeras leves', en: 'Minor wounds & mild limps' },
+        cure: {
+          es: 'Limpia la herida con suero fisiológico estéril y clorhexidina diluida; evita alcohol o agua oxigenada. Para cojera leve, reposo estricto 24–48h sin saltos y revisa las almohadillas por espigas o cristales.',
+          en: 'Flush wounds with sterile saline and diluted chlorhexidine (avoid alcohol/peroxide). For mild limps, strict 24–48h rest and inspect paw pads for foxtails or thorns.',
+        },
+      },
+    ],
+    homeCare: {
+      es: [
+        'Hidratación fraccionada en tomas pequeñas cada 30–45 min.',
+        'Revisa encías (rosadas y húmedas) y cuenta respiraciones en reposo (<30 RPM).',
+        'Mantén calma y evita ejercicio tras comer en razas grandes (previene torsión).',
+      ],
+      en: [
+        'Offer small, frequent water sips every 30–45 min.',
+        'Check gums (pink & moist) and resting breathing (<30 RPM).',
+        'Keep calm and avoid exercise right after meals in large breeds.',
+      ],
+    },
+    avoid: {
+      es: 'Nunca des ibuprofeno, paracetamol, huesos cocidos ni provoques el vómito sin orden veterinaria.',
+      en: 'Never give ibuprofen, acetaminophen, cooked bones, or induce vomiting without vet instruction.',
+    },
+  },
+  cat: {
+    summary: {
+      es: 'Los gatos ocultan el dolor. Más de 24h sin comer o intentos de orinar sin éxito son urgencias médicas reales.',
+      en: 'Cats hide pain well. >24h without eating or straining to urinate with no output are true medical emergencies.',
+    },
+    conditions: [
+      {
+        title: { es: 'Anorexia (>24h sin comer) y Lipidosis Hepática', en: 'Anorexia (>24h) & Hepatic Lipidosis' },
+        cure: {
+          es: 'Si un gato deja de comer más de 24h puede desarrollar fallo hepático graso. Prueba comida húmeda templada o caldos sin sal/cebolla; si rechaza todo, el veterinario debe tratar la causa, hidratar y pautar estimulantes del apetito o sonda.',
+          en: 'Cats fasting >24h risk fatal fatty liver disease. Try warmed wet food or plain unsalted broth; if refused, a vet must treat the root cause with fluids and appetite support.',
+        },
+      },
+      {
+        title: { es: 'Obstrucción urinaria (machos sobre todo)', en: 'Urinary blockage (especially males)' },
+        cure: {
+          es: 'Entrar al arenero repetidamente sin sacar orina o maullar de dolor es URGENCIA VITAL (riesgo renal en <24h). Requiere sondaje urinario bajo sedación y fluidoterapia en clínica; no se cura en casa.',
+          en: 'Repeatedly straining in the litter box with no urine is a LIFE-THREATENING emergency. Requires immediate vet catheterization under sedation and IV fluids.',
+        },
+      },
+    ],
+    homeCare: {
+      es: [
+        'Asegura agua fresca en fuentes o varios cuencos lejos del arenero.',
+        'Si estornuda leve, limpia secreciones nasales con gasa humedecida en suero templado.',
+        'Observa si respira con la boca abierta (en gatos siempre es urgencia inmediata).',
+      ],
+      en: [
+        'Provide fresh water bowls or fountains away from the litter box.',
+        'Gently wipe mild nasal discharge with warm saline-dampened gauze.',
+        'Watch for open-mouth breathing (always an immediate ER sign in cats).',
+      ],
+    },
+    avoid: {
+      es: 'Paracetamol, aspirina, permetrinas (pipetas de perro) y lirios son MORTALES en gatos.',
+      en: 'Acetaminophen, aspirin, dog flea permethrins, and lilies are FATAL to cats.',
+    },
+  },
+  rabbit: {
+    summary: {
+      es: 'Los conejos son herbívoros estrictos cuyo intestino nunca debe detenerse. >12h sin comer o sin hacer bolitas es emergencia.',
+      en: 'Rabbits are strict herbivores whose gut must never stop. >12h without eating or droppings is an emergency.',
+    },
+    conditions: [
+      {
+        title: { es: 'Estasis gastrointestinal (Íleo / Parada intestinal)', en: 'GI Stasis (Gut slowdown)' },
+        cure: {
+          es: 'Es la urgencia nº1: se trata en clínica con procinéticos (metoclopramida/cisaprida), analgesia segura (meloxicam), fluidos subcutáneos/IV y papilla de recuperación (Critical Care) si NO hay obstrucción. En casa, mantén temperatura estable y ofrece heno fresco o hierbas húmedas.',
+          en: '#1 rabbit emergency: vets treat with gut motility meds, safe pain relief (meloxicam), fluids, and Critical Care syringe feeding ONLY if no blockage exists. At home, keep warm and offer fresh hay/wet greens.',
+        },
+      },
+      {
+        title: { es: 'Golpe de calor (>27°C) y Pododermatitis', en: 'Heatstroke (>27°C) & Sore Hocks' },
+        cure: {
+          es: 'Los conejos no sudan y toleran mal >27°C. Refresca aplicando paños frescos (no helados) en las orejas, donde disipan calor. Para patas irritadas, añade superficie blanda y consulta crema cicatrizante apta.',
+          en: 'Rabbits cannot sweat. Cool them by gently dampening their ears with cool (not icy) cloths. For sore hocks, add soft bedding and seek vet-safe barrier care.',
+        },
+      },
+    ],
+    homeCare: {
+      es: [
+        'Heno de hierba ilimitado 24/7 (80% de su dieta) y agua siempre disponible.',
+        'Palpa suavemente el abdomen: si está duro como un tambor, NO fuerces papilla y ve a exóticos.',
+        'Controla el tamaño y cantidad de heces cada 6–8 horas.',
+      ],
+      en: [
+        'Unlimited grass hay 24/7 (80% of diet) and fresh water at all times.',
+        'Gently feel the belly: if drum-hard/bloated, DO NOT force-feed; go to an exotic ER.',
+        'Monitor fecal pellet size and output every 6–8 hours.',
+      ],
+    },
+    avoid: {
+      es: 'Nunca bañes al conejo por inmersión (riesgo de shock) ni des antibióticos orales humanos o amoxicilina.',
+      en: 'Never submerge a rabbit in water (shock risk) or give oral penicillin/amoxicillin.',
+    },
+  },
+  bird: {
+    summary: {
+      es: 'Las aves ocultan los síntomas hasta estar muy débiles. Si está embolada en el fondo de la jaula o mueve la cola al respirar, es urgente.',
+      en: 'Birds hide illness until critical. Fluffed feathers on the cage floor or tail bobbing with each breath require urgent avian care.',
+    },
+    conditions: [
+      {
+        title: { es: 'Dificultad respiratoria ("Tail bobbing") e Infecciones', en: 'Respiratory distress (Tail bobbing) & Infections' },
+        cure: {
+          es: 'Requiere veterinario de exóticos/aves para nebulización, oxígeno y antibiótico o antifúngico específico tras cultivo. Mientras llegas, coloca al ave en un transportín cálido (29–32°C), oscuro y sin corrientes.',
+          en: 'Needs an avian vet for oxygen, nebulization, and targeted antibiotics/antifungals. Meanwhile, place in a warm (29–32°C), quiet, draft-free hospital box.',
+        },
+      },
+      {
+        title: { es: 'Hemorragia en cañón de pluma o uña rota', en: 'Broken blood feather or nail bleeding' },
+        cure: {
+          es: 'Las aves tienen poca sangre: aplica presión directa con gasa y polvo hemostático o maicena limpia durante 2–3 minutos. Si es una pluma de sangre rota que no deja de sangrar, el vet debe extraerla de raíz.',
+          en: 'Birds have small blood volume: apply gentle pressure with gauze and styptic powder or cornstarch for 2–3 min. Uncontrolled blood feathers need vet removal.',
+        },
+      },
+    ],
+    homeCare: {
+      es: [
+        'Calor estable (28–31°C) con bolsa térmica envuelta en toalla fuera de la jaula.',
+        'Reduce el estrés al mínimo: cubre 3 lados del transportín y evita ruidos.',
+        'Retira perchas altas si está débil para evitar caídas y coloca agua/comida en el suelo.',
+      ],
+      en: [
+        'Provide gentle warmth (28–31°C) via wrapped heating pad outside the carrier.',
+        'Minimize stress: cover 3 sides of the carrier and keep quiet.',
+        'Lower perches and place food/water on the floor if weak.',
+      ],
+    },
+    avoid: {
+      es: 'NUNCA cocines con teflón/PTFE cerca, ni uses aerosoles, velas perfumadas ni aguacate (mortal en aves).',
+      en: 'NEVER use PTFE/Teflon cookware, aerosols, scented candles, or feed avocado (fatal to birds).',
+    },
+  },
+  rodent: {
+    summary: {
+      es: 'Cobayas y hámsteres se deshidratan en horas. En hámsteres la "cola húmeda" es letal sin antibiótico rápido; las cobayas necesitan Vitamina C diaria.',
+      en: 'Guinea pigs & hamsters dehydrate within hours. Hamster "wet tail" is fatal without rapid antibiotics; guinea pigs require daily Vitamin C.',
+    },
+    conditions: [
+      {
+        title: { es: 'Cola húmeda en hámsteres (Ileítis proliferativa)', en: 'Hamster Wet Tail (Proliferative ileitis)' },
+        cure: {
+          es: 'Diarrea acuosa que moja la zona trasera, postura encorvada y apatía. Se trata el mismo día en veterinario de exóticos con antibióticos específicos (enrofloxacina/metronidazol) y suero subcutáneo para frenar el shock.',
+          en: 'Watery diarrhea soaking the rear, hunched posture, and lethargy. Requires same-day exotic vet antibiotics and subcutaneous fluids to prevent fatal dehydration.',
+        },
+      },
+      {
+        title: { es: 'Déficit de Vitamina C (Escorbuto) en cobayas', en: 'Vitamin C Deficiency (Scurvy) in Guinea Pigs' },
+        cure: {
+          es: 'Las cobayas no sintetizan Vitamina C. Provoca articulaciones inflamadas, cojera, sangrado de encías y apatía. Se corrige con suplemento de Vitamina C oral pautado por el vet y pimiento rojo/verduras frescas diarias.',
+          en: 'Guinea pigs cannot make Vitamin C. Causes swollen joints, limping, and lethargy. Treated with vet-dosed oral Vitamin C and daily fresh bell pepper/leafy greens.',
+        },
+      },
+    ],
+    homeCare: {
+      es: [
+        'Aísla inmediatamente a un hámster con diarrea de otros roedores y desinfecta con agua caliente.',
+        'Mantén ambiente templado (20–24°C) sin corrientes ni sol directo.',
+        'Ofrece gotas de agua en jeringa sin aguja con mucho cuidado si acepta beber.',
+      ],
+      en: [
+        'Immediately isolate a hamster with diarrhea and sanitize the habitat.',
+        'Keep ambient temperature steady (20–24°C), away from drafts and direct sun.',
+        'Offer tiny water drops via needleless syringe only if alert and swallowing.',
+      ],
+    },
+    avoid: {
+      es: 'No uses virutas de pino/cedro (dañan vías respiratorias) ni antibióticos de perro/gato.',
+      en: 'Avoid pine/cedar shavings (respiratory toxins) and dog/cat antibiotics.',
+    },
+  },
+  reptile: {
+    summary: {
+      es: 'El 80% de las enfermedades en reptiles (tortugas, geckos, pogonas) derivan de temperatura incorrecta, falta de luz UVB o déficit de calcio.',
+      en: '80% of reptile illnesses (turtles, geckos, dragons) stem from improper thermal gradients, lack of UVB, or calcium deficiency.',
+    },
+    conditions: [
+      {
+        title: { es: 'Enfermedad Ósea Metabólica (MBD / Caparazón blando)', en: 'Metabolic Bone Disease (MBD / Soft shell)' },
+        cure: {
+          es: 'Mandíbula o caparazón blando, temblores o incapacidad para levantar el cuerpo. El veterinario administra calcio inyectable/líquido y ajusta UVB. En casa: instala lámpara UVB adecuada (5.0 o 10.0 según especie) y espolvorea calcio sin/con D3.',
+          en: 'Soft shell/jaw, tremors, or inability to lift body. Vets treat with liquid/injectable calcium and UVB correction. At home: ensure proper UVB bulb (replaced every 6 mo) and calcium dusting.',
+        },
+      },
+      {
+        title: { es: 'Infección respiratoria (Burbujas nasales / Boca abierta)', en: 'Respiratory Infection (Nose bubbles / Gaping)' },
+        cure: {
+          es: 'Suele aparecer por frío o humedad inadecuada. Requiere antibiótico sistémico recetado por veterinario de exóticos (los reptiles no tosen bien el moco). Mientras tanto, eleva suavemente el punto caliente dentro de su rango seguro.',
+          en: 'Often triggered by low temperatures or poor humidity. Requires exotic vet systemic antibiotics. Meanwhile, verify and gently optimize the basking temperature within safe species range.',
+        },
+      },
+    ],
+    homeCare: {
+      es: [
+        'Baño tibio poco profundo (28–30°C, agua sin superar la barbilla) 15 min ayuda a rehidratar tortugas y lagartos.',
+        'Verifica con termómetro digital el gradiente térmico (zona fría vs punto de calor).',
+        'Asegura renovación de bombilla UVB cada 6–9 meses aunque siga dando luz visible.',
+      ],
+      en: [
+        'Shallow lukewarm soak (28–30°C, below chin level) for 15 min helps rehydrate.',
+        'Verify thermal gradient (cool side vs basking spot) with a digital thermometer.',
+        'Replace UVB bulbs every 6–9 months even if they still emit visible light.',
+      ],
+    },
+    avoid: {
+      es: 'No uses piedras calefactoras (causan quemaduras graves) ni agua fría en baños.',
+      en: 'Never use hot rocks (severe thermal burns) or cold water for soaking.',
+    },
+  },
+};
+
 export const SYMPTOM_CATEGORIES = [
   {
     id: 'digestive',
@@ -10,8 +255,10 @@ export const SYMPTOM_CATEGORIES = [
       { id: 'vomit_repeated', label: { es: 'Vómitos repetidos (+3 veces / no retiene agua)', en: 'Repeated vomiting (3+ / can’t keep water down)' }, severity: 'high' },
       { id: 'diarrhea_mild', label: { es: 'Diarrea blanda sin sangre', en: 'Soft diarrhea without blood' }, severity: 'mild' },
       { id: 'diarrhea_blood', label: { es: 'Diarrea con sangre o negra', en: 'Bloody or black/tarry diarrhea' }, severity: 'critical' },
-      { id: 'no_appetite', label: { es: 'No quiere comer (>24h)', en: 'Loss of appetite (>24h)' }, severity: 'moderate' },
+      { id: 'no_appetite', label: { es: 'No quiere comer (>12-24h)', en: 'Loss of appetite (>12-24h)' }, severity: 'moderate' },
       { id: 'bloated_abdomen', label: { es: 'Abdomen hinchado, duro o arcadas sin vómito', en: 'Swollen/hard abdomen or dry heaving' }, severity: 'critical' },
+      { id: 'rabbit_no_poop', label: { es: 'Conejo/Roedor: sin heces o heces muy pequeñas (>12h)', en: 'Rabbit/Rodent: no droppings or tiny pellets (>12h)' }, severity: 'critical' },
+      { id: 'rodent_wet_tail', label: { es: 'Roedor/Hámster: zona trasera húmeda o diarrea acuosa', en: 'Rodent/Hamster: wet soiled rear or watery diarrhea' }, severity: 'critical' },
     ],
   },
   {
@@ -23,6 +270,8 @@ export const SYMPTOM_CATEGORIES = [
       { id: 'cough_mild', label: { es: 'Tos seca ocasional', en: 'Occasional dry cough' }, severity: 'moderate' },
       { id: 'open_mouth_cat', label: { es: 'Gato respirando con la boca abierta', en: 'Cat open-mouth breathing' }, severity: 'critical' },
       { id: 'labored_breathing', label: { es: 'Respiración rápida, forzada o jadeo en reposo', en: 'Fast/labored breathing or panting at rest' }, severity: 'critical' },
+      { id: 'bird_tail_bob', label: { es: 'Ave: cola sube y baja al respirar o plumaje erizado', en: 'Bird: tail bobbing when breathing or fluffed feathers' }, severity: 'critical' },
+      { id: 'reptile_resp_bubbles', label: { es: 'Reptil: burbujas en nariz/boca o respiración abierta', en: 'Reptile: nose/mouth bubbles or open-mouth breathing' }, severity: 'critical' },
     ],
   },
   {
@@ -34,6 +283,7 @@ export const SYMPTOM_CATEGORIES = [
       { id: 'no_weight', label: { es: 'No apoya la pata / llora al tocar', en: 'Won’t bear weight / cries when touched' }, severity: 'high' },
       { id: 'sudden_paralysis', label: { es: 'Incapacidad repentina para levantarse o arrastrar patas', en: 'Sudden inability to stand or dragging legs' }, severity: 'critical' },
       { id: 'stiffness', label: { es: 'Rigidez al levantarse tras dormir', en: 'Stiffness after resting' }, severity: 'mild' },
+      { id: 'reptile_soft_shell', label: { es: 'Reptil/Tortuga: caparazón o mandíbula blanda / temblores', en: 'Reptile/Turtle: soft shell/jaw or tremors' }, severity: 'high' },
     ],
   },
   {
@@ -144,15 +394,18 @@ export function evaluateTriage({
   const moderateCount = matchedSymptoms.filter((s) => s.severity === 'moderate').length;
 
   const catNoAppetiteLong = species === 'cat' && selectedSymptoms.includes('no_appetite') && durationHours >= 24;
+  const herbivoreGiStasisRisk = (species === 'rabbit' || species === 'rodent') && selectedSymptoms.includes('no_appetite') && durationHours >= 12;
+  const birdWeaknessRisk = species === 'bird' && (selectedSymptoms.includes('no_appetite') || selectedSymptoms.includes('lethargy'));
   const vulnerableAge = ageGroup === 'puppy' || ageGroup === 'senior';
 
   let level = 'monitor';
-  if (hasRedFlag || hasCriticalSymptom || vitalsEval.maxSeverity === 'critical') {
+  if (hasRedFlag || hasCriticalSymptom || vitalsEval.maxSeverity === 'critical' || herbivoreGiStasisRisk) {
     level = 'emergency';
   } else if (
     hasHighSymptom ||
     vitalsEval.maxSeverity === 'high' ||
     catNoAppetiteLong ||
+    birdWeaknessRisk ||
     intensity === 'severe' ||
     moderateCount >= 2 ||
     (vulnerableAge && matchedSymptoms.length > 0 && durationHours >= 12) ||
@@ -172,6 +425,18 @@ export function evaluateTriage({
     reasons.push({
       es: 'Uno o más síntomas indican riesgo agudo (respiratorio, neurológico, obstrucción o hemorragia).',
       en: 'One or more symptoms indicate acute risk (respiratory, neuro, obstruction, or bleeding).',
+    });
+  }
+  if (herbivoreGiStasisRisk) {
+    reasons.push({
+      es: 'En conejos y roedores, >12h sin comer puede provocar estasis gastrointestinal mortal.',
+      en: 'In rabbits and rodents, >12h without eating risks fatal GI stasis.',
+    });
+  }
+  if (birdWeaknessRisk) {
+    reasons.push({
+      es: 'Las aves ocultan enfermedades hasta estar graves; la apatía o falta de apetito requiere veterinario de exóticos hoy.',
+      en: 'Birds hide illness until critical; lethargy or appetite loss needs same-day avian vet care.',
     });
   }
   if (catNoAppetiteLong) {

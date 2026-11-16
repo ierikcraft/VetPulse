@@ -1,6 +1,6 @@
-import { SYMPTOM_CATEGORIES, RED_FLAGS, BRIEF_QUESTIONS } from '../data/clinicalData.js';
+import { SYMPTOM_CATEGORIES, RED_FLAGS, BRIEF_QUESTIONS, getSpeciesLabel } from '../data/clinicalData.js';
 import { escapeHtml } from '../state/store.js';
-import { icon } from '../utils/icons.js';
+import { icon, speciesIcon } from '../utils/icons.js';
 
 export function buildBriefPlainText(state, activePet) {
   const { lang, triageDraft, toxinDraft } = state;
@@ -16,7 +16,7 @@ export function buildBriefPlainText(state, activePet) {
   const lines = [
     `${isEs ? 'FICHA CLÍNICA PARA CONSULTA VETERINARIA' : 'VET-VISIT CLINICAL BRIEF'} (VetPulse)`,
     `----------------------------------------`,
-    `${isEs ? 'Paciente' : 'Patient'}: ${activePet.name} (${activePet.species === 'dog' ? (isEs ? 'Perro' : 'Dog') : (isEs ? 'Gato' : 'Cat')}, ${activePet.breed})`,
+    `${isEs ? 'Paciente' : 'Patient'}: ${activePet.name} (${getSpeciesLabel(activePet.species, lang)}, ${activePet.breed})`,
     `${isEs ? 'Peso' : 'Weight'}: ${activePet.weightKg} kg | ${isEs ? 'Edad' : 'Age'}: ${activePet.ageYears} ${isEs ? 'años' : 'yrs'}`,
     `${isEs ? 'Medicación habitual' : 'Current meds'}: ${activePet.meds || (isEs ? 'Ninguna' : 'None')}`,
     `${isEs ? 'Alergias' : 'Allergies'}: ${activePet.allergies || (isEs ? 'Ninguna conocida' : 'None known')}`,
@@ -67,7 +67,7 @@ export function renderBriefView(state, activePet) {
   const allSymMap = new Map();
   SYMPTOM_CATEGORIES.forEach((c) => c.symptoms.forEach((s) => allSymMap.set(s.id, s.label[lang])));
   const symLabels = triageDraft.selectedSymptoms.map((id) => allSymMap.get(id)).filter(Boolean);
-  const petIcon = activePet.species === 'dog' ? icon('dog', 18) : icon('cat', 18);
+  const petIcon = speciesIcon(activePet.species, 18);
 
   return `
     <section class="page-section" aria-labelledby="brief-heading">

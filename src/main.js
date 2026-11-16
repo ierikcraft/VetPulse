@@ -2,8 +2,10 @@ import './styles/main.css';
 import {
   I18N,
   FOOD_PLANT_GUIDE,
+  SPECIES_LIST,
   evaluateTriage,
   evaluateToxin,
+  estimateCost,
 } from './data/clinicalData.js';
 import {
   getState,
@@ -11,8 +13,9 @@ import {
   setState,
   subscribe,
   escapeHtml,
+  MAX_PETS,
 } from './state/store.js';
-import { icon } from './utils/icons.js';
+import { icon, speciesIcon } from './utils/icons.js';
 import { renderTriageView } from './views/triageView.js';
 import { renderToxinsView, renderGuideCards } from './views/toxinsView.js';
 import { renderCostsView } from './views/costsView.js';
@@ -68,7 +71,7 @@ function render() {
   if (!appEl) return;
 
   document.documentElement.setAttribute('data-theme', state.darkMode ? 'dark' : 'light');
-  const petIcon = activePet.species === 'dog' ? icon('dog', 16) : icon('cat', 16);
+  const petIcon = speciesIcon(activePet.species, 16);
 
   appEl.innerHTML = `
     <div class="app-shell">
@@ -390,9 +393,14 @@ appRoot.addEventListener('click', async (e) => {
       setState({ costDraft: { ...state.costDraft, petSize: target.dataset.size } });
       break;
     }
+    case 'select-care-species': {
+      setState({ careGuideSpecies: target.dataset.species });
+      break;
+    }
     case 'select-pet': {
       setState({
         activePetId: target.dataset.petId,
+        careGuideSpecies: null,
         triageDraft: { ...state.triageDraft, result: null },
         toxinDraft: { ...state.toxinDraft, result: null },
       });
@@ -471,6 +479,7 @@ appRoot.addEventListener('change', (e) => {
     case 'switch-pet':
       setState({
         activePetId: target.value,
+        careGuideSpecies: null,
         triageDraft: { ...state.triageDraft, result: null },
         toxinDraft: { ...state.toxinDraft, result: null },
       });
@@ -603,11 +612,18 @@ appRoot.addEventListener('submit', (e) => {
     setState({ pets: updatedPets });
     showToast(isEs ? 'Recordatorio añadido' : 'Reminder added');
   } else if (action === 'submit-pet') {
+    if (state.pets.length >= MAX_PETS) {
+      showToast(isEs ? `Máximo de ${MAX_PETS} mascotas alcanzado` : `Maximum of ${MAX_PETS} pets reached`);
+      return;
+    }
+
     const name = String(fd.get('name') || '').trim();
-    const species = fd.get('species') === 'cat' ? 'cat' : 'dog';
+    const rawSpecies = String(fd.get('species') || 'dog');
+    const spMeta = SPECIES_LIST.find((s) => s.id === rawSpecies) || SPECIES_LIST[0];
+    const species = spMeta.id;
     const weightKg = parseFloat(fd.get('weightKg'));
     const ageYears = parseInt(fd.get('ageYears'), 10);
-    const breed = String(fd.get('breed') || '').trim() || (species === 'dog' ? 'Mestizo' : 'Común Europeo');
+    const breed = String(fd.get('breed') || '').trim() || spMeta.defaultBreed[state.lang] || spMeta.defaultBreed.es;
     const allergies = String(fd.get('allergies') || '').trim();
 
     if (!name || !Number.isFinite(weightKg) || weightKg <= 0 || !Number.isFinite(ageYears) || ageYears < 0) {
@@ -636,8 +652,9 @@ appRoot.addEventListener('submit', (e) => {
     setState({
       pets: [...state.pets, newPet],
       activePetId: newId,
+      careGuideSpecies: null,
     });
-    showToast(isEs ? `${name} añadido` : `${name} added`);
+    showToast(isEs ? `${name} añadido (${state.pets.length + 1}/${MAX_PETS})` : `${name} added (${state.pets.length + 1}/${MAX_PETS})`);
   }
 });
 

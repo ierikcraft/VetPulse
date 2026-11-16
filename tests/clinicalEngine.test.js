@@ -100,7 +100,8 @@ test('escapeHtml neutralizes XSS payloads', () => {
   assert.ok(clean.includes('&lt;script&gt;'));
 });
 
-import { evaluateVitals } from '../src/data/clinicalData.js';
+import { evaluateVitals, SPECIES_LIST, SPECIES_CARE_GUIDES } from '../src/data/clinicalData.js';
+import { MAX_PETS } from '../src/state/store.js';
 
 test('evaluateVitals flags blue/pale gums and high fever as critical', () => {
   const res = evaluateVitals({ species: 'dog', gums: 'blue', tempC: '40.5', rpm: '50' });
@@ -119,4 +120,44 @@ test('evaluateTriage escalates to emergency when vitals show brick-red gums', ()
     vitals: { gums: 'brick', tempC: '38.5', rpm: '24' },
   });
   assert.equal(res.level, 'emergency');
+});
+
+test('evaluateTriage escalates rabbit >12h no_appetite to emergency (GI stasis risk)', () => {
+  const res = evaluateTriage({
+    species: 'rabbit',
+    ageGroup: 'adult',
+    selectedSymptoms: ['no_appetite'],
+    redFlags: [],
+    durationHours: 12,
+    intensity: 'mild',
+  });
+  assert.equal(res.level, 'emergency');
+});
+
+test('evaluateTriage handles bird tail bobbing and rodent wet tail as emergency', () => {
+  assert.equal(
+    evaluateTriage({ species: 'bird', selectedSymptoms: ['bird_tail_bob'] }).level,
+    'emergency'
+  );
+  assert.equal(
+    evaluateTriage({ species: 'rodent', selectedSymptoms: ['rodent_wet_tail'] }).level,
+    'emergency'
+  );
+  assert.equal(
+    evaluateTriage({ species: 'bird', selectedSymptoms: ['lethargy'] }).level,
+    'vet24h'
+  );
+  assert.equal(
+    evaluateTriage({ species: 'reptile', selectedSymptoms: ['reptile_soft_shell'] }).level,
+    'vet24h'
+  );
+});
+
+test('MAX_PETS is 5 and all 6 species have care guides', () => {
+  assert.equal(MAX_PETS, 5);
+  assert.equal(SPECIES_LIST.length, 6);
+  for (const sp of SPECIES_LIST) {
+    assert.ok(SPECIES_CARE_GUIDES[sp.id], `Missing care guide for ${sp.id}`);
+    assert.ok(SPECIES_CARE_GUIDES[sp.id].conditions.length >= 2);
+  }
 });

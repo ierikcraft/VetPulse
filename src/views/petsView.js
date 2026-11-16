@@ -1,5 +1,6 @@
-import { escapeHtml } from '../state/store.js';
-import { icon } from '../utils/icons.js';
+import { escapeHtml, MAX_PETS } from '../state/store.js';
+import { icon, speciesIcon } from '../utils/icons.js';
+import { SPECIES_LIST, getSpeciesLabel } from '../data/clinicalData.js';
 
 function renderWeightSparkline(weights = [], lang = 'es') {
   if (!weights || weights.length < 2) {
@@ -62,16 +63,22 @@ export function renderPetsView(state, activePet) {
   const { lang, pets } = state;
   const isEs = lang === 'es';
   const reminders = activePet.reminders || [];
+  const atLimit = pets.length >= MAX_PETS;
 
   return `
     <section class="page-section" aria-labelledby="pets-heading">
       <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:10px;">
         <div>
-          <h1 id="pets-heading">${isEs ? 'Mis Mascotas y Diario' : 'My Pets & Health Diary'}</h1>
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <h1 id="pets-heading" style="margin:0;">${isEs ? 'Mis Mascotas y Diario' : 'My Pets & Health Diary'}</h1>
+            <span id="pet-count-badge" style="background:var(--primary-soft); color:var(--primary); font-size:0.8rem; font-weight:700; padding:4px 10px; border-radius:999px;">
+              ${pets.length} / ${MAX_PETS} ${isEs ? 'mascotas' : 'pets'}
+            </span>
+          </div>
           <p>${
             isEs
-              ? 'Peso, recordatorios de medicación/vacunas y copia de seguridad.'
-              : 'Weight, medication/vaccine reminders, and data backup.'
+              ? 'Hasta 5 mascotas reales (perros, gatos, conejos, aves, roedores y reptiles), peso y recordatorios.'
+              : 'Up to 5 real pets (dogs, cats, rabbits, birds, rodents, reptiles), weight, and reminders.'
           }</p>
         </div>
         <button type="button" id="btn-export-backup" class="btn btn-secondary" style="min-height:38px; font-size:0.84rem;" data-action="export-backup">
@@ -84,7 +91,8 @@ export function renderPetsView(state, activePet) {
         ${pets
           .map((pet) => {
             const isActive = pet.id === activePet.id;
-            const petIcon = pet.species === 'dog' ? icon('dog', 18) : icon('cat', 18);
+            const petIcon = speciesIcon(pet.species, 18);
+            const spLabel = getSpeciesLabel(pet.species, lang);
             return `
               <div class="pet-card ${isActive ? 'active-pet' : ''}">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
@@ -94,7 +102,7 @@ export function renderPetsView(state, activePet) {
                       <span>${escapeHtml(pet.name)}</span>
                     </div>
                     <div style="font-size:0.84rem; color:var(--text-secondary);">
-                      ${escapeHtml(pet.breed)} · ${escapeHtml(pet.ageYears)} ${isEs ? 'años' : 'yrs'} · <strong>${escapeHtml(pet.weightKg)} kg</strong>
+                      ${escapeHtml(spLabel)} · ${escapeHtml(pet.breed)} · ${escapeHtml(pet.ageYears)} ${isEs ? 'años' : 'yrs'} · <strong>${escapeHtml(pet.weightKg)} kg</strong>
                     </div>
                   </div>
                   ${
@@ -213,43 +221,53 @@ export function renderPetsView(state, activePet) {
         </div>
 
         <div class="card">
-          <div class="card-title">${icon('plus', 18)} <span>${isEs ? 'Añadir nueva mascota' : 'Add a new pet'}</span></div>
-          <form id="form-add-pet" data-action="submit-pet">
-            <div class="grid-2">
-              <div class="form-group">
-                <label class="form-label" for="pet-name">${isEs ? 'Nombre' : 'Name'}</label>
-                <input id="pet-name" name="name" type="text" class="form-control" required placeholder="Coco" />
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="pet-species">${isEs ? 'Especie' : 'Species'}</label>
-                <select id="pet-species" name="species" class="form-control">
-                  <option value="dog">${isEs ? 'Perro' : 'Dog'}</option>
-                  <option value="cat">${isEs ? 'Gato' : 'Cat'}</option>
-                </select>
-              </div>
-            </div>
-            <div class="grid-2">
-              <div class="form-group">
-                <label class="form-label" for="pet-weight">${isEs ? 'Peso (kg)' : 'Weight (kg)'}</label>
-                <input id="pet-weight" name="weightKg" type="number" step="0.1" min="0.1" class="form-control" required placeholder="8.5" />
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="pet-age">${isEs ? 'Edad (años)' : 'Age (years)'}</label>
-                <input id="pet-age" name="ageYears" type="number" step="1" min="0" max="30" class="form-control" required placeholder="3" />
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="pet-breed">${isEs ? 'Raza' : 'Breed'}</label>
-              <input id="pet-breed" name="breed" type="text" class="form-control" placeholder="${isEs ? 'Mestizo, Labrador, Siamés...' : 'Mixed, Lab, Siamese...'}" />
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="pet-allergies">${isEs ? 'Alergias o condiciones' : 'Allergies or chronic conditions'}</label>
-              <input id="pet-allergies" name="allergies" type="text" class="form-control" placeholder="${isEs ? 'Opcional' : 'Optional'}" />
-            </div>
-            <button type="submit" id="btn-create-pet" class="btn btn-primary btn-block">
-              ${isEs ? 'Crear perfil de mascota' : 'Create pet profile'}
-            </button>
-          </form>
+          <div class="card-title">${icon('plus', 18)} <span>${isEs ? `Añadir nueva mascota (${pets.length}/${MAX_PETS})` : `Add a new pet (${pets.length}/${MAX_PETS})`}</span></div>
+          ${
+            atLimit
+              ? `<div id="pet-limit-notice" style="padding:14px; border-radius:var(--radius-sm); background:var(--warning-soft, rgba(245,158,11,0.12)); border:1px solid var(--border-subtle); font-size:0.9rem; color:var(--text-primary);">
+                  <strong>${isEs ? 'Límite de 5 mascotas alcanzado.' : '5-pet limit reached.'}</strong>
+                  <p style="margin:6px 0 0; color:var(--text-secondary);">
+                    ${isEs ? 'Elimina una mascota existente arriba si deseas añadir un perfil nuevo.' : 'Remove an existing pet above if you want to add a new profile.'}
+                  </p>
+                </div>`
+              : `<form id="form-add-pet" data-action="submit-pet">
+                  <div class="grid-2">
+                    <div class="form-group">
+                      <label class="form-label" for="pet-name">${isEs ? 'Nombre' : 'Name'}</label>
+                      <input id="pet-name" name="name" type="text" class="form-control" required placeholder="Coco" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" for="pet-species">${isEs ? 'Especie' : 'Species'}</label>
+                      <select id="pet-species" name="species" class="form-control">
+                        ${SPECIES_LIST.map(
+                          (sp) => `<option value="${escapeHtml(sp.id)}">${escapeHtml(sp.label[lang])}</option>`
+                        ).join('')}
+                      </select>
+                    </div>
+                  </div>
+                  <div class="grid-2">
+                    <div class="form-group">
+                      <label class="form-label" for="pet-weight">${isEs ? 'Peso (kg)' : 'Weight (kg)'}</label>
+                      <input id="pet-weight" name="weightKg" type="number" step="0.01" min="0.02" class="form-control" required placeholder="2.5" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" for="pet-age">${isEs ? 'Edad (años)' : 'Age (years)'}</label>
+                      <input id="pet-age" name="ageYears" type="number" step="1" min="0" max="60" class="form-control" required placeholder="3" />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="pet-breed">${isEs ? 'Raza / Variedad' : 'Breed / Variety'}</label>
+                    <input id="pet-breed" name="breed" type="text" class="form-control" placeholder="${isEs ? 'Belier, Agapornis, Cobaya, Tortuga rusa...' : 'Lop, Lovebird, Guinea Pig, Tortoise...'}" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="pet-allergies">${isEs ? 'Alergias o condiciones' : 'Allergies or chronic conditions'}</label>
+                    <input id="pet-allergies" name="allergies" type="text" class="form-control" placeholder="${isEs ? 'Opcional' : 'Optional'}" />
+                  </div>
+                  <button type="submit" id="btn-create-pet" class="btn btn-primary btn-block">
+                    ${isEs ? 'Crear perfil de mascota' : 'Create pet profile'}
+                  </button>
+                </form>`
+          }
         </div>
       </div>
     </section>
