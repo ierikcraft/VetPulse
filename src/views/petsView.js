@@ -270,6 +270,181 @@ export function renderPetsView(state, activePet) {
           }
         </div>
       </div>
+
+      ${renderVetVisitsAndDocs(activePet, lang)}
     </section>
+  `;
+}
+
+function formatBytes(bytes) {
+  const n = Number(bytes) || 0;
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  return `${(n / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+function getDocCategoryLabel(cat, lang) {
+  const map = {
+    lab: { es: 'Analítica / Lab', en: 'Lab Result' },
+    vaccine: { es: 'Cartilla / Vacuna', en: 'Vaccine Record' },
+    rx: { es: 'Receta', en: 'Prescription' },
+    imaging: { es: 'Radiografía / Eco', en: 'X-Ray / Ultrasound' },
+    invoice: { es: 'Factura', en: 'Invoice' },
+    other: { es: 'Otro', en: 'Other' },
+  };
+  return (map[cat] || map.other)[lang] || (map[cat] || map.other).es;
+}
+
+function renderVetVisitsAndDocs(activePet, lang) {
+  const isEs = lang === 'es';
+  const today = new Date().toISOString().slice(0, 10);
+  const visits = activePet.vetVisits || [];
+  const docs = activePet.documents || [];
+
+  return `
+    <div class="grid-2" style="margin-top:18px;">
+      <div class="card">
+        <div class="card-title">${icon('calendar', 18)} <span>${isEs ? `Visitas al Veterinario (${escapeHtml(activePet.name)})` : `Vet Visits (${escapeHtml(activePet.name)})`}</span></div>
+        <form id="form-add-vet-visit" data-action="submit-vet-visit">
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label" for="visit-date">${isEs ? 'Fecha' : 'Date'}</label>
+              <input id="visit-date" name="date" type="date" class="form-control" required value="${today}" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="visit-cost">${isEs ? 'Coste (opcional)' : 'Cost (optional)'}</label>
+              <input id="visit-cost" name="cost" type="number" step="0.01" min="0" class="form-control" placeholder="55" />
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label" for="visit-clinic">${isEs ? 'Clínica / Veterinario' : 'Clinic / Vet'}</label>
+              <input id="visit-clinic" name="clinic" type="text" class="form-control" placeholder="${isEs ? 'Clínica Central' : 'Central Vet Clinic'}" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="visit-reason">${isEs ? 'Motivo' : 'Reason'}</label>
+              <input id="visit-reason" name="reason" type="text" class="form-control" required placeholder="${isEs ? 'Vacuna, revisión, urgencia...' : 'Vaccine, checkup, ER...'}" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="visit-diagnosis">${isEs ? 'Diagnóstico / Tratamiento' : 'Diagnosis / Treatment'}</label>
+            <input id="visit-diagnosis" name="diagnosis" type="text" class="form-control" placeholder="${isEs ? 'Medicación recetada, próxima revisión...' : 'Prescribed meds, follow-up notes...'}" />
+          </div>
+          <button type="submit" id="btn-save-visit" class="btn btn-primary btn-block">
+            ${icon('plus', 15)}
+            <span>${isEs ? 'Guardar visita' : 'Save vet visit'}</span>
+          </button>
+        </form>
+
+        <div id="vet-visits-list" style="margin-top:16px;">
+          <div style="font-size:0.84rem; font-weight:700; color:var(--text-secondary); margin-bottom:8px;">
+            ${isEs ? `Historial de visitas (${visits.length})` : `Visit history (${visits.length})`}
+          </div>
+          ${
+            visits.length === 0
+              ? `<div style="font-size:0.85rem; color:var(--text-muted);">${isEs ? 'Sin visitas registradas para esta mascota.' : 'No vet visits recorded for this pet yet.'}</div>`
+              : visits
+                  .map(
+                    (v) => `
+                <div class="visit-item" style="padding:10px 12px; border:1px solid var(--border-subtle); border-radius:var(--radius-sm); margin-bottom:8px;">
+                  <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+                    <div>
+                      <div style="font-weight:700; font-size:0.9rem;">${escapeHtml(v.reason)}</div>
+                      <div style="font-size:0.8rem; color:var(--text-muted);">
+                        ${escapeHtml(v.date)}${v.clinic ? ` · ${escapeHtml(v.clinic)}` : ''}${Number.isFinite(Number(v.cost)) && Number(v.cost) > 0 ? ` · <strong>${escapeHtml(v.cost)}</strong>` : ''}
+                      </div>
+                    </div>
+                    <button type="button" class="btn btn-danger-soft" style="min-height:28px; padding:4px 8px; font-size:0.75rem;" data-action="delete-vet-visit" data-visit-id="${escapeHtml(v.id)}" aria-label="${isEs ? 'Eliminar visita' : 'Delete visit'}">
+                      ${icon('trash', 13)}
+                    </button>
+                  </div>
+                  ${v.diagnosis ? `<div style="font-size:0.84rem; color:var(--text-secondary); margin-top:6px;">${escapeHtml(v.diagnosis)}</div>` : ''}
+                </div>
+              `
+                  )
+                  .join('')
+          }
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">${icon('fileText', 18)} <span>${isEs ? `Documentos Clínicos (${escapeHtml(activePet.name)})` : `Clinical Documents (${escapeHtml(activePet.name)})`}</span></div>
+        <form id="form-add-doc" data-action="submit-doc">
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label" for="doc-title">${isEs ? 'Título (opcional)' : 'Title (optional)'}</label>
+              <input id="doc-title" name="title" type="text" class="form-control" placeholder="${isEs ? 'Analítica noviembre, Cartilla...' : 'Nov bloodwork, Vaccine card...'}" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="doc-category">${isEs ? 'Categoría' : 'Category'}</label>
+              <select id="doc-category" name="category" class="form-control">
+                <option value="lab">${isEs ? 'Analítica / Lab' : 'Lab Result'}</option>
+                <option value="vaccine">${isEs ? 'Cartilla / Vacuna' : 'Vaccine Record'}</option>
+                <option value="rx">${isEs ? 'Receta' : 'Prescription'}</option>
+                <option value="imaging">${isEs ? 'Radiografía / Eco' : 'X-Ray / Ultrasound'}</option>
+                <option value="invoice">${isEs ? 'Factura' : 'Invoice'}</option>
+                <option value="other">${isEs ? 'Otro' : 'Other'}</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="doc-file">${isEs ? 'Archivo (PDF, imagen, texto — máx. 1.5 MB)' : 'File (PDF, image, text — max 1.5 MB)'}</label>
+            <input id="doc-file" name="file" type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.doc,.docx" class="form-control" required />
+          </div>
+          <button type="submit" id="btn-save-doc" class="btn btn-primary btn-block">
+            ${icon('upload', 15)}
+            <span>${isEs ? 'Guardar documento' : 'Save document'}</span>
+          </button>
+        </form>
+
+        <div id="pet-docs-list" style="margin-top:16px;">
+          <div style="font-size:0.84rem; font-weight:700; color:var(--text-secondary); margin-bottom:8px;">
+            ${isEs ? `Documentos guardados (${docs.length})` : `Saved documents (${docs.length})`}
+          </div>
+          ${
+            docs.length === 0
+              ? `<div style="font-size:0.85rem; color:var(--text-muted);">${isEs ? 'Aún no hay documentos adjuntos para esta mascota.' : 'No documents attached for this pet yet.'}</div>`
+              : docs
+                  .map(
+                    (d) => `
+                <div class="doc-item" style="display:flex; justify-content:space-between; align-items:center; gap:8px; padding:10px 12px; border:1px solid var(--border-subtle); border-radius:var(--radius-sm); margin-bottom:8px;">
+                  <div style="min-width:0;">
+                    <div style="display:flex; align-items:center; gap:6px; font-weight:700; font-size:0.9rem;">
+                      <span style="color:var(--primary); flex-shrink:0;">${icon('fileText', 15)}</span>
+                      <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(d.title)}</span>
+                    </div>
+                    <div style="font-size:0.78rem; color:var(--text-muted); margin-top:2px;">
+                      ${escapeHtml(getDocCategoryLabel(d.category, lang))} · ${escapeHtml(formatBytes(d.sizeBytes))} · ${escapeHtml(d.uploadedAt)}
+                    </div>
+                  </div>
+                  <div style="display:flex; gap:6px; flex-shrink:0;">
+                    <a
+                      href="${escapeHtml(d.dataUrl)}"
+                      download="${escapeHtml(d.fileName)}"
+                      class="btn btn-secondary"
+                      style="min-height:30px; padding:4px 9px; font-size:0.78rem;"
+                      title="${isEs ? 'Descargar documento' : 'Download document'}"
+                    >
+                      ${icon('download', 13)}
+                    </a>
+                    <button
+                      type="button"
+                      class="btn btn-danger-soft"
+                      style="min-height:30px; padding:4px 8px; font-size:0.78rem;"
+                      data-action="delete-doc"
+                      data-doc-id="${escapeHtml(d.id)}"
+                      aria-label="${isEs ? 'Eliminar documento' : 'Delete document'}"
+                    >
+                      ${icon('trash', 13)}
+                    </button>
+                  </div>
+                </div>
+              `
+                  )
+                  .join('')
+          }
+        </div>
+      </div>
+    </div>
   `;
 }

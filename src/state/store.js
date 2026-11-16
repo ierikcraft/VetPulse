@@ -2,6 +2,7 @@
 
 const STORAGE_KEY = 'vetpulse_state_v2';
 export const MAX_PETS = 5;
+export const MAX_DOC_SIZE_BYTES = 1572864; // 1.5 MB per file for safe localStorage persistence
 
 export function escapeHtml(str) {
   return String(str ?? '')
@@ -58,6 +59,17 @@ export function getDefaultState() {
           { id: 'rem_1', title: 'Simparica Trio (antiparasitario)', freqDays: 30, dueDate: addDays(3) },
           { id: 'rem_2', title: 'Vacuna Rabia anual', freqDays: 365, dueDate: addDays(42) },
         ],
+        vetVisits: [
+          {
+            id: 'visit_1',
+            date: '2026-11-10',
+            clinic: 'Clínica Veterinaria Central',
+            reason: 'Revisión anual y vacuna polivalente',
+            diagnosis: 'Estado general óptimo, peso estable. Próxima revisión en 1 año.',
+            cost: 55,
+          },
+        ],
+        documents: [],
       },
       {
         id: 'pet_milo',
@@ -81,6 +93,17 @@ export function getDefaultState() {
         reminders: [
           { id: 'rem_3', title: 'Semintra 1 dosis diaria', freqDays: 1, dueDate: addDays(0) },
         ],
+        vetVisits: [
+          {
+            id: 'visit_2',
+            date: '2026-11-05',
+            clinic: 'Clínica Veterinaria Central',
+            reason: 'Control renal senior',
+            diagnosis: 'Creatinina 1.5 mg/dL estable. Mantener Semintra diario y dieta renal.',
+            cost: 85,
+          },
+        ],
+        documents: [],
       },
     ],
     triageDraft: {
@@ -136,7 +159,14 @@ function loadState() {
       },
       toxinDraft: { ...defaults.toxinDraft, ...(parsed.toxinDraft || {}) },
       costDraft: { ...defaults.costDraft, ...(parsed.costDraft || {}) },
-      pets: Array.isArray(parsed.pets) && parsed.pets.length > 0 ? parsed.pets : defaults.pets,
+      pets:
+        Array.isArray(parsed.pets) && parsed.pets.length > 0
+          ? parsed.pets.map((p) => ({
+              ...p,
+              vetVisits: Array.isArray(p.vetVisits) ? p.vetVisits : [],
+              documents: Array.isArray(p.documents) ? p.documents : [],
+            }))
+          : defaults.pets,
     };
   } catch {
     return getDefaultState();
@@ -156,13 +186,16 @@ export function getActivePet() {
 
 export function setState(updater) {
   const next = typeof updater === 'function' ? updater(state) : { ...state, ...updater };
-  state = next;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    state = next;
+    listeners.forEach((fn) => fn(state));
+    return true;
   } catch {
-    // Ignore storage quota errors gracefully
+    state = next;
+    listeners.forEach((fn) => fn(state));
+    return false;
   }
-  listeners.forEach((fn) => fn(state));
 }
 
 export function subscribe(fn) {

@@ -14,6 +14,7 @@ import {
   subscribe,
   escapeHtml,
   MAX_PETS,
+  MAX_DOC_SIZE_BYTES,
 } from './state/store.js';
 import { icon, speciesIcon } from './utils/icons.js';
 import { renderTriageView } from './views/triageView.js';
@@ -417,6 +418,28 @@ appRoot.addEventListener('click', async (e) => {
       showToast(isEs ? 'Mascota eliminada' : 'Pet removed');
       break;
     }
+    case 'delete-vet-visit': {
+      const visitId = target.dataset.visitId;
+      const updatedPets = state.pets.map((p) =>
+        p.id === activePet.id
+          ? { ...p, vetVisits: (p.vetVisits || []).filter((v) => v.id !== visitId) }
+          : p
+      );
+      setState({ pets: updatedPets });
+      showToast(isEs ? 'Visita eliminada' : 'Vet visit removed');
+      break;
+    }
+    case 'delete-doc': {
+      const docId = target.dataset.docId;
+      const updatedPets = state.pets.map((p) =>
+        p.id === activePet.id
+          ? { ...p, documents: (p.documents || []).filter((d) => d.id !== docId) }
+          : p
+      );
+      setState({ pets: updatedPets });
+      showToast(isEs ? 'Documento eliminado' : 'Document removed');
+      break;
+    }
     case 'complete-reminder': {
       const remId = target.dataset.remId;
       const today = new Date();
@@ -647,6 +670,8 @@ appRoot.addEventListener('submit', (e) => {
       weights: [{ date: today, kg: weightKg }],
       logs: [],
       reminders: [],
+      vetVisits: [],
+      documents: [],
     };
 
     setState({
@@ -655,6 +680,77 @@ appRoot.addEventListener('submit', (e) => {
       careGuideSpecies: null,
     });
     showToast(isEs ? `${name} añadido (${state.pets.length + 1}/${MAX_PETS})` : `${name} added (${state.pets.length + 1}/${MAX_PETS})`);
+  } else if (action === 'submit-vet-visit') {
+    const date = String(fd.get('date') || '').trim() || new Date().toISOString().slice(0, 10);
+    const clinic = String(fd.get('clinic') || '').trim();
+    const reason = String(fd.get('reason') || '').trim();
+    const diagnosis = String(fd.get('diagnosis') || '').trim();
+    const costRaw = parseFloat(fd.get('cost'));
+    const cost = Number.isFinite(costRaw) && costRaw >= 0 ? costRaw : null;
+
+    if (!reason) {
+      showToast(isEs ? 'Indica el motivo de la visita' : 'Enter the visit reason');
+      return;
+    }
+
+    const visit = {
+      id: `visit_${Date.now()}`,
+      date,
+      clinic,
+      reason,
+      diagnosis,
+      cost,
+    };
+
+    const updatedPets = state.pets.map((p) =>
+      p.id === activePet.id ? { ...p, vetVisits: [visit, ...(p.vetVisits || [])] } : p
+    );
+    setState({ pets: updatedPets });
+    showToast(isEs ? 'Visita guardada' : 'Vet visit saved');
+  } else if (action === 'submit-doc') {
+    const fileInput = form.querySelector('#doc-file');
+    const file = fileInput && fileInput.files && fileInput.files[0];
+    if (!file) {
+      showToast(isEs ? 'Selecciona un archivo' : 'Select a file');
+      return;
+    }
+    if (file.size > MAX_DOC_SIZE_BYTES) {
+      showToast(isEs ? 'El archivo supera el límite de 1.5 MB' : 'File exceeds 1.5 MB limit');
+      return;
+    }
+
+    const title = String(fd.get('title') || '').trim() || file.name;
+    const category = String(fd.get('category') || 'other');
+    const uploadedAt = new Date().toISOString().slice(0, 10);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = String(reader.result || '');
+      const docItem = {
+        id: `doc_${Date.now()}`,
+        title,
+        category,
+        fileName: file.name,
+        fileType: file.type || 'application/octet-stream',
+        sizeBytes: file.size,
+        uploadedAt,
+        dataUrl,
+      };
+      const latestState = getState();
+      const updatedPets = latestState.pets.map((p) =>
+        p.id === activePet.id ? { ...p, documents: [docItem, ...(p.documents || [])] } : p
+      );
+      const savedOk = setState({ pets: updatedPets });
+      if (savedOk) {
+        showToast(isEs ? 'Documento guardado' : 'Document saved');
+      } else {
+        showToast(isEs ? 'Almacenamiento lleno: elimina algún archivo antiguo' : 'Storage full: remove an older document');
+      }
+    };
+    reader.onerror = () => {
+      showToast(isEs ? 'No se pudo leer el archivo' : 'Failed to read file');
+    };
+    reader.readAsDataURL(file);
   }
 });
 

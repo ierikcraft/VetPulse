@@ -46,6 +46,13 @@ export function buildBriefPlainText(state, activePet) {
       `${isEs ? 'Posible exposición tóxica' : 'Possible Toxin Exposure'}: ${toxinDraft.result.toxin.name[lang]} (~${toxinDraft.result.doseMgKg} mg/kg)`
     );
   }
+  const latestVisit = (activePet.vetVisits || [])[0];
+  if (latestVisit) {
+    lines.push(
+      ``,
+      `${isEs ? 'Última visita al veterinario' : 'Last vet visit'}: ${latestVisit.date} — ${latestVisit.reason}${latestVisit.diagnosis ? ` (${latestVisit.diagnosis})` : ''}`
+    );
+  }
 
   const questions = BRIEF_QUESTIONS[lang] || BRIEF_QUESTIONS.es;
   lines.push(``, `${isEs ? 'Preguntas para el veterinario' : 'Questions for the vet'}:`);
