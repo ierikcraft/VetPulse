@@ -17,8 +17,9 @@ export function getDefaultState() {
   return {
     lang: 'es',
     darkMode: false,
-    activeTab: 'pets',
+    activeTab: 'triage',
     activePetId: null,
+    setupDraftSpecies: 'dog',
     isPro: false,
     showProModal: false,
     showEmergencyModal: false,

@@ -24,6 +24,7 @@ import { renderPetsView } from './views/petsView.js';
 import { renderBriefView, buildBriefPlainText } from './views/briefView.js';
 import { renderProModal } from './views/proModal.js';
 import { renderEmergencyModal } from './views/emergencyModal.js';
+import { renderSetupView } from './views/setupView.js';
 
 const NAV_ITEMS = [
   { id: 'triage', icon: 'stethoscope', key: 'navTriage' },
@@ -72,6 +73,15 @@ function render() {
   if (!appEl) return;
 
   document.documentElement.setAttribute('data-theme', state.darkMode ? 'dark' : 'light');
+
+  if (state.pets.length === 0) {
+    appEl.innerHTML = `
+      ${renderSetupView(state)}
+      ${toastMessage ? `<div class="toast" role="status">${escapeHtml(toastMessage)}</div>` : ''}
+    `;
+    return;
+  }
+
   const petIcon = speciesIcon(activePet.species, 16);
 
   appEl.innerHTML = `
@@ -406,6 +416,21 @@ appRoot.addEventListener('click', async (e) => {
       setState({ costDraft: { ...state.costDraft, petSize: target.dataset.size } });
       break;
     }
+    case 'select-setup-species': {
+      const sp = target.dataset.species;
+      state.setupDraftSpecies = sp;
+      const hidden = document.getElementById('setup-species-input');
+      if (hidden) hidden.value = sp;
+      document.querySelectorAll('.setup-species-tile').forEach((btn) => {
+        const isCurrent = btn.dataset.species === sp;
+        btn.classList.toggle('active', isCurrent);
+        btn.setAttribute('aria-pressed', String(isCurrent));
+      });
+      const spMeta = SPECIES_LIST.find((s) => s.id === sp) || SPECIES_LIST[0];
+      const breedInput = document.getElementById('setup-pet-breed');
+      if (breedInput) breedInput.placeholder = spMeta.defaultBreed[state.lang] || spMeta.defaultBreed.es;
+      break;
+    }
     case 'select-care-species': {
       setState({ careGuideSpecies: target.dataset.species });
       break;
@@ -659,6 +684,63 @@ appRoot.addEventListener('submit', (e) => {
     );
     setState({ pets: updatedPets });
     showToast(isEs ? 'Recordatorio añadido' : 'Reminder added');
+  } else if (action === 'submit-setup') {
+    const name = String(fd.get('name') || '').trim();
+    const rawSpecies = String(fd.get('species') || state.setupDraftSpecies || 'dog');
+    const spMeta = SPECIES_LIST.find((s) => s.id === rawSpecies) || SPECIES_LIST[0];
+    const species = spMeta.id;
+    const weightKg = parseFloat(fd.get('weightKg'));
+    const ageYears = parseInt(fd.get('ageYears'), 10);
+    const breed = String(fd.get('breed') || '').trim() || spMeta.defaultBreed[state.lang] || spMeta.defaultBreed.es;
+    const allergies = String(fd.get('allergies') || '').trim();
+    const meds = String(fd.get('meds') || '').trim();
+    const clinicName = String(fd.get('clinicName') || '').trim() || state.vetContacts.clinicName;
+    const erPhone = String(fd.get('erPhone') || '').trim() || state.vetContacts.erPhone;
+    const regionId = String(fd.get('regionId') || state.costDraft.regionId || 'ES');
+
+    if (!name || !Number.isFinite(weightKg) || weightKg <= 0 || !Number.isFinite(ageYears) || ageYears < 0) {
+      showToast(isEs ? 'Revisa el nombre, peso y edad de tu mascota' : 'Check your pet’s name, weight, and age');
+      return;
+    }
+
+    const ageGroup = ageYears < 1 ? 'puppy' : ageYears >= 8 ? 'senior' : 'adult';
+    const petSize = weightKg < 10 ? 'small' : weightKg > 25 ? 'large' : 'medium';
+    const newId = `pet_${Date.now()}`;
+    const today = new Date().toISOString().slice(0, 10);
+    const newPet = {
+      id: newId,
+      name,
+      species,
+      breed,
+      ageYears,
+      ageGroup,
+      weightKg,
+      allergies: allergies || (isEs ? 'Ninguna conocida' : 'None known'),
+      meds: meds || (isEs ? 'Ninguna' : 'None'),
+      weights: [{ date: today, kg: weightKg }],
+      logs: [],
+      reminders: [],
+      vetVisits: [],
+      documents: [],
+    };
+
+    setState({
+      pets: [newPet],
+      activePetId: newId,
+      activeTab: 'triage',
+      careGuideSpecies: null,
+      vetContacts: {
+        ...state.vetContacts,
+        clinicName,
+        erPhone,
+      },
+      costDraft: {
+        ...state.costDraft,
+        regionId,
+        petSize,
+      },
+    });
+    showToast(isEs ? `¡Perfil de ${name} configurado!` : `${name}’s profile is ready!`);
   } else if (action === 'submit-pet') {
     if (state.pets.length >= MAX_PETS) {
       showToast(isEs ? `Máximo de ${MAX_PETS} mascotas alcanzado` : `Maximum of ${MAX_PETS} pets reached`);
