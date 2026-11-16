@@ -12,6 +12,7 @@ import {
   subscribe,
   escapeHtml,
 } from './state/store.js';
+import { icon } from './utils/icons.js';
 import { renderTriageView } from './views/triageView.js';
 import { renderToxinsView, renderGuideCards } from './views/toxinsView.js';
 import { renderCostsView } from './views/costsView.js';
@@ -21,11 +22,11 @@ import { renderProModal } from './views/proModal.js';
 import { renderEmergencyModal } from './views/emergencyModal.js';
 
 const NAV_ITEMS = [
-  { id: 'triage', icon: '🩺', key: 'navTriage' },
-  { id: 'toxins', icon: '🧪', key: 'navToxins' },
-  { id: 'costs', icon: '💶', key: 'navCosts' },
-  { id: 'pets', icon: '🐾', key: 'navPets' },
-  { id: 'brief', icon: '📋', key: 'navBrief' },
+  { id: 'triage', icon: 'stethoscope', key: 'navTriage' },
+  { id: 'toxins', icon: 'flask', key: 'navToxins' },
+  { id: 'costs', icon: 'wallet', key: 'navCosts' },
+  { id: 'pets', icon: 'paw', key: 'navPets' },
+  { id: 'brief', icon: 'clipboard', key: 'navBrief' },
 ];
 
 let toastMessage = '';
@@ -67,6 +68,7 @@ function render() {
   if (!appEl) return;
 
   document.documentElement.setAttribute('data-theme', state.darkMode ? 'dark' : 'light');
+  const petIcon = activePet.species === 'dog' ? icon('dog', 16) : icon('cat', 16);
 
   appEl.innerHTML = `
     <div class="app-shell">
@@ -89,7 +91,7 @@ function render() {
               data-action="nav"
               data-tab="${item.id}"
             >
-              <span class="nav-icon">${item.icon}</span>
+              ${icon(item.icon, 18)}
               <span>${escapeHtml(dict[item.key])}</span>
             </button>
           `
@@ -99,8 +101,8 @@ function render() {
         <div class="sidebar-footer">
           <button type="button" id="btn-sidebar-pro" class="pro-promo-card" data-action="open-pro">
             <div class="pro-promo-title">
-              <span>${state.isPro ? 'VetPulse Pro ✓' : 'VetPulse Pro'}</span>
-              <span>→</span>
+              <span>VetPulse Pro</span>
+              ${state.isPro ? icon('check', 16) : icon('arrowRight', 16)}
             </div>
             <div class="pro-promo-desc">
               ${
@@ -122,7 +124,7 @@ function render() {
 
           <div class="topbar-controls">
             <div class="pet-switcher">
-              <span>${activePet.species === 'dog' ? '🐶' : '🐱'}</span>
+              ${petIcon}
               <select id="global-pet-select" aria-label="${escapeHtml(dict.activePet)}" data-action="switch-pet">
                 ${state.pets
                   .map(
@@ -134,7 +136,8 @@ function render() {
             </div>
 
             <button type="button" id="btn-topbar-sos" class="sos-btn" data-action="open-sos">
-              🆘 SOS
+              ${icon('alert', 14)}
+              <span>SOS</span>
             </button>
 
             <button
@@ -145,7 +148,7 @@ function render() {
               title="${isEs ? 'Modo Noche (Triaje nocturno)' : 'Night-Triage Mode'}"
               aria-label="Toggle dark mode"
             >
-              ${state.darkMode ? '☀️' : '🌙'}
+              ${state.darkMode ? icon('sun', 16) : icon('moon', 16)}
             </button>
 
             <button type="button" id="btn-lang-toggle" class="lang-toggle" data-action="toggle-lang">
@@ -153,14 +156,14 @@ function render() {
             </button>
 
             <button type="button" id="btn-mobile-pro" class="pro-pill-btn" data-action="open-pro">
-              ${state.isPro ? 'Pro ✓' : 'Pro'}
+              Pro
             </button>
           </div>
         </header>
 
         <main class="content-container">
           <div class="disclaimer-banner" role="note">
-            <span>ℹ️</span>
+            ${icon('info', 16)}
             <span>${escapeHtml(dict.disclaimer)}</span>
           </div>
           ${renderActiveView(state, activePet)}
@@ -177,7 +180,7 @@ function render() {
             data-action="nav"
             data-tab="${item.id}"
           >
-            <span class="mobile-tab-icon">${item.icon}</span>
+            ${icon(item.icon, 20)}
             <span>${escapeHtml(dict[item.key])}</span>
           </button>
         `
@@ -298,10 +301,10 @@ appRoot.addEventListener('click', async (e) => {
           state.triageDraft.vitals = { ...(state.triageDraft.vitals || {}), rpm: String(rpm) };
           const inputEl = document.getElementById('vitals-rpm');
           if (inputEl) inputEl.value = String(rpm);
-          target.textContent = `🫁 ${rpm} RPM`;
+          target.innerHTML = `${icon('wind', 15)} <span>${rpm} RPM</span>`;
         }
       } else {
-        target.textContent = `🫁 ${rpmTaps.length}/3...`;
+        target.innerHTML = `${icon('wind', 15)} <span>${rpmTaps.length}/3...</span>`;
       }
       break;
     }
@@ -422,7 +425,7 @@ appRoot.addEventListener('click', async (e) => {
           return { ...r, dueDate: nextDate.toISOString().slice(0, 10) };
         });
         const nextLogs = completedTitle
-          ? [{ id: `log_${Date.now()}`, date: todayStr, type: 'med', note: `✓ ${completedTitle}` }, ...(p.logs || [])]
+          ? [{ id: `log_${Date.now()}`, date: todayStr, type: 'med', note: `${isEs ? 'Administrado' : 'Done'}: ${completedTitle}` }, ...(p.logs || [])]
           : p.logs;
         return { ...p, reminders: nextRems, logs: nextLogs };
       });
@@ -543,8 +546,8 @@ appRoot.addEventListener('input', (e) => {
     if (adv) {
       adv.textContent =
         yearlySavings >= avgMidCost
-          ? (isEs ? '• ✅ Tu hucha anual cubriría este escenario sin seguro.' : '• ✅ Your 1-year fund covers this scenario without insurance.')
-          : (isEs ? '• ⚠️ Un seguro con cobertura de urgencias evitaría pagar la diferencia de golpe.' : '• ⚠️ Emergency pet insurance would buffer the gap.');
+          ? (isEs ? 'Tu hucha anual cubriría este escenario sin seguro.' : 'Your 1-year fund covers this scenario without insurance.')
+          : (isEs ? 'Un seguro con cobertura de urgencias evitaría pagar la diferencia de golpe.' : 'Emergency pet insurance would buffer the gap.');
     }
   }
 

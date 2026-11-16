@@ -1,5 +1,6 @@
 import { TOXINS_DB, FOOD_PLANT_GUIDE } from '../data/clinicalData.js';
 import { escapeHtml } from '../state/store.js';
+import { icon } from '../utils/icons.js';
 
 export function renderToxinsView(state, activePet) {
   const { lang, toxinDraft } = state;
@@ -26,7 +27,7 @@ export function renderToxinsView(state, activePet) {
       </div>
 
       <div class="card">
-        <div class="card-title">🧪 ${isEs ? 'Calculadora de dosis tóxica (mg/kg)' : 'Toxic Dose Calculator (mg/kg)'}</div>
+        <div class="card-title">${icon('flask', 18)} <span>${isEs ? 'Calculadora de dosis tóxica (mg/kg)' : 'Toxic Dose Calculator (mg/kg)'}</span></div>
         <div class="form-group">
           <label class="form-label" for="toxin-select">${isEs ? '¿Qué ha ingerido o tocado?' : 'What did your pet ingest or touch?'}</label>
           <select id="toxin-select" class="form-control" data-action="change-toxin">
@@ -69,14 +70,15 @@ export function renderToxinsView(state, activePet) {
         </div>
 
         <button type="button" id="btn-calc-toxin" class="btn btn-primary btn-block" data-action="calc-toxin">
-          🧪 ${isEs ? 'Calcular riesgo tóxico' : 'Calculate Toxic Risk'}
+          ${icon('flask', 17)}
+          <span>${isEs ? 'Calcular riesgo tóxico' : 'Calculate Toxic Risk'}</span>
         </button>
       </div>
 
       ${renderToxinResult(toxinDraft.result, activePet, lang)}
 
       <div class="card" style="margin-top:16px;">
-        <div class="card-title">🔍 ${isEs ? '¿Puede comer o tocar esto? (Buscador rápido)' : 'Can my pet eat or touch this? (Quick Finder)'}</div>
+        <div class="card-title">${icon('search', 18)} <span>${isEs ? '¿Puede comer o tocar esto? (Buscador rápido)' : 'Can my pet eat or touch this? (Quick Finder)'}</span></div>
         <div class="form-group">
           <input
             id="guide-search"
@@ -125,9 +127,9 @@ export function renderGuideCards(items, lang) {
     return `<div style="color:var(--text-muted); font-size:0.9rem;">${isEs ? 'Sin coincidencias. Si tienes duda, consulta con tu veterinario.' : 'No matches found. When in doubt, ask your vet.'}</div>`;
   }
   const badgeLabel = {
-    safe: isEs ? '✅ Seguro' : '✅ Safe',
-    caution: isEs ? '⚠️ Precaución' : '⚠️ Caution',
-    toxic: isEs ? '☠️ Tóxico' : '☠️ Toxic',
+    safe: `${icon('check', 12)} <span>${isEs ? 'Seguro' : 'Safe'}</span>`,
+    caution: `${icon('alert', 12)} <span>${isEs ? 'Precaución' : 'Caution'}</span>`,
+    toxic: `${icon('ban', 12)} <span>${isEs ? 'Tóxico' : 'Toxic'}</span>`,
   };
   return items
     .map(
@@ -138,8 +140,8 @@ export function renderGuideCards(items, lang) {
       <span style="font-size:0.83rem; color:var(--text-secondary);">${escapeHtml(item.note[lang])}</span>
       ${
         item.toxinId
-          ? `<button type="button" class="btn btn-secondary" style="min-height:32px; padding:4px 10px; font-size:0.78rem; margin-top:4px; width:fit-content;" data-action="pick-toxin" data-toxin-id="${item.toxinId}">
-              ${isEs ? 'Calcular dosis arriba ↑' : 'Calculate dose above ↑'}
+          ? `<button type="button" class="btn btn-secondary" style="min-height:34px; padding:4px 10px; font-size:0.78rem; margin-top:4px; width:fit-content;" data-action="pick-toxin" data-toxin-id="${item.toxinId}">
+              ${isEs ? 'Calcular dosis arriba' : 'Calculate dose above'}
             </button>`
           : ''
       }
@@ -182,7 +184,7 @@ function renderToxinResult(result, activePet, lang) {
   const info = levelMap[result.risk];
 
   return `
-    <div id="toxin-result-card" class="result-card ${info.cls}" role="region" aria-live="polite">
+    <div id="toxin-result-card" class="result-card ${info.cls}" role="region" aria-live="polite" style="margin-top:16px;">
       <div class="result-badge">${escapeHtml(info.badge)}</div>
       <h2 class="result-title">${escapeHtml(info.title)}</h2>
       <p style="margin:0 0 10px; font-weight:600;">
@@ -195,10 +197,12 @@ function renderToxinResult(result, activePet, lang) {
       </p>
       <div style="display:flex; gap:10px; flex-wrap:wrap;">
         <button type="button" id="btn-toxin-to-brief" class="btn btn-primary" data-action="go-brief">
-          📋 ${isEs ? 'Añadir a Ficha Vet' : 'Include in Vet Brief'}
+          ${icon('clipboard', 16)}
+          <span>${isEs ? 'Añadir a Ficha Vet' : 'Include in Vet Brief'}</span>
         </button>
         <button type="button" id="btn-toxin-to-costs" class="btn btn-secondary" data-action="go-costs">
-          💶 ${isEs ? 'Estimar coste de urgencias' : 'Estimate ER cost'}
+          ${icon('wallet', 16)}
+          <span>${isEs ? 'Estimar coste de urgencias' : 'Estimate ER cost'}</span>
         </button>
       </div>
     </div>

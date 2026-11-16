@@ -1,5 +1,6 @@
 import { SYMPTOM_CATEGORIES, RED_FLAGS, BRIEF_QUESTIONS } from '../data/clinicalData.js';
 import { escapeHtml } from '../state/store.js';
+import { icon } from '../utils/icons.js';
 
 export function buildBriefPlainText(state, activePet) {
   const { lang, triageDraft, toxinDraft } = state;
@@ -13,14 +14,14 @@ export function buildBriefPlainText(state, activePet) {
   const rfLabels = triageDraft.redFlags.map((id) => rfMap.get(id)).filter(Boolean);
 
   const lines = [
-    `📋 ${isEs ? 'FICHA CLÍNICA PARA CONSULTA VETERINARIA' : 'VET-VISIT CLINICAL BRIEF'} (VetPulse)`,
+    `${isEs ? 'FICHA CLÍNICA PARA CONSULTA VETERINARIA' : 'VET-VISIT CLINICAL BRIEF'} (VetPulse)`,
     `----------------------------------------`,
-    `🐾 ${isEs ? 'Paciente' : 'Patient'}: ${activePet.name} (${activePet.species === 'dog' ? (isEs ? 'Perro' : 'Dog') : (isEs ? 'Gato' : 'Cat')}, ${activePet.breed})`,
-    `⚖️ ${isEs ? 'Peso' : 'Weight'}: ${activePet.weightKg} kg | ${isEs ? 'Edad' : 'Age'}: ${activePet.ageYears} ${isEs ? 'años' : 'yrs'}`,
-    `💊 ${isEs ? 'Medicación habitual' : 'Current meds'}: ${activePet.meds || (isEs ? 'Ninguna' : 'None')}`,
-    `⚠️ ${isEs ? 'Alergias' : 'Allergies'}: ${activePet.allergies || (isEs ? 'Ninguna conocida' : 'None known')}`,
+    `${isEs ? 'Paciente' : 'Patient'}: ${activePet.name} (${activePet.species === 'dog' ? (isEs ? 'Perro' : 'Dog') : (isEs ? 'Gato' : 'Cat')}, ${activePet.breed})`,
+    `${isEs ? 'Peso' : 'Weight'}: ${activePet.weightKg} kg | ${isEs ? 'Edad' : 'Age'}: ${activePet.ageYears} ${isEs ? 'años' : 'yrs'}`,
+    `${isEs ? 'Medicación habitual' : 'Current meds'}: ${activePet.meds || (isEs ? 'Ninguna' : 'None')}`,
+    `${isEs ? 'Alergias' : 'Allergies'}: ${activePet.allergies || (isEs ? 'Ninguna conocida' : 'None known')}`,
     ``,
-    `🩺 ${isEs ? 'Motivo de consulta / Triaje' : 'Chief Complaint / Triage'}:`,
+    `${isEs ? 'Motivo de consulta / Triaje' : 'Chief Complaint / Triage'}:`,
     `- ${isEs ? 'Síntomas' : 'Symptoms'}: ${symLabels.length ? symLabels.join(', ') : (isEs ? 'No especificados' : 'None selected')}`,
     `- ${isEs ? 'Señales de alarma' : 'Red flags'}: ${rfLabels.length ? rfLabels.join(', ') : (isEs ? 'Ninguna' : 'None')}`,
     `- ${isEs ? 'Inicio' : 'Onset'}: ~${triageDraft.durationHours}h | ${isEs ? 'Intensidad' : 'Intensity'}: ${triageDraft.intensity}`,
@@ -42,12 +43,12 @@ export function buildBriefPlainText(state, activePet) {
   if (toxinDraft.result && toxinDraft.result.valid) {
     lines.push(
       ``,
-      `🧪 ${isEs ? 'Posible exposición tóxica' : 'Possible Toxin Exposure'}: ${toxinDraft.result.toxin.name[lang]} (~${toxinDraft.result.doseMgKg} mg/kg)`
+      `${isEs ? 'Posible exposición tóxica' : 'Possible Toxin Exposure'}: ${toxinDraft.result.toxin.name[lang]} (~${toxinDraft.result.doseMgKg} mg/kg)`
     );
   }
 
   const questions = BRIEF_QUESTIONS[lang] || BRIEF_QUESTIONS.es;
-  lines.push(``, `❓ ${isEs ? 'Preguntas para el veterinario' : 'Questions for the vet'}:`);
+  lines.push(``, `${isEs ? 'Preguntas para el veterinario' : 'Questions for the vet'}:`);
   questions.forEach((q, idx) => lines.push(`${idx + 1}. ${q}`));
 
   return lines.join('\n');
@@ -66,6 +67,7 @@ export function renderBriefView(state, activePet) {
   const allSymMap = new Map();
   SYMPTOM_CATEGORIES.forEach((c) => c.symptoms.forEach((s) => allSymMap.set(s.id, s.label[lang])));
   const symLabels = triageDraft.selectedSymptoms.map((id) => allSymMap.get(id)).filter(Boolean);
+  const petIcon = activePet.species === 'dog' ? icon('dog', 18) : icon('cat', 18);
 
   return `
     <section class="page-section" aria-labelledby="brief-heading">
@@ -80,10 +82,12 @@ export function renderBriefView(state, activePet) {
 
       <div class="no-print" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
         <button type="button" id="btn-copy-brief" class="btn btn-primary" data-action="copy-brief">
-          📲 ${isEs ? 'Copiar para WhatsApp' : 'Copy for WhatsApp / SMS'}
+          ${icon('copy', 16)}
+          <span>${isEs ? 'Copiar para WhatsApp' : 'Copy for WhatsApp / SMS'}</span>
         </button>
         <button type="button" id="btn-print-brief" class="btn btn-secondary" data-action="print-brief">
-          🖨️ ${isEs ? 'Imprimir / Guardar PDF' : 'Print / Save PDF'}
+          ${icon('printer', 16)}
+          <span>${isEs ? 'Imprimir / Guardar PDF' : 'Print / Save PDF'}</span>
         </button>
       </div>
 
@@ -97,8 +101,9 @@ export function renderBriefView(state, activePet) {
               ${new Date().toLocaleDateString(isEs ? 'es-ES' : 'en-US', { dateStyle: 'long' })}
             </div>
           </div>
-          <div style="text-align:right; font-weight:700;">
-            ${activePet.species === 'dog' ? '🐶' : '🐱'} ${escapeHtml(activePet.name)} (${escapeHtml(activePet.weightKg)} kg)
+          <div style="display:flex; align-items:center; gap:6px; font-weight:700;">
+            <span style="color:var(--primary);">${petIcon}</span>
+            <span>${escapeHtml(activePet.name)} (${escapeHtml(activePet.weightKg)} kg)</span>
           </div>
         </div>
 

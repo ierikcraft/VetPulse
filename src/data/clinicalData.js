@@ -3,7 +3,7 @@
 export const SYMPTOM_CATEGORIES = [
   {
     id: 'digestive',
-    icon: '🩺',
+    icon: 'stethoscope',
     label: { es: 'Digestivo', en: 'Digestive' },
     symptoms: [
       { id: 'vomit_once', label: { es: 'Vómito aislado (1-2 veces)', en: 'Isolated vomiting (1-2x)' }, severity: 'mild' },
@@ -16,7 +16,7 @@ export const SYMPTOM_CATEGORIES = [
   },
   {
     id: 'respiratory',
-    icon: '🫁',
+    icon: 'wind',
     label: { es: 'Respiratorio', en: 'Respiratory' },
     symptoms: [
       { id: 'sneezing', label: { es: 'Estornudos o secreción nasal clara', en: 'Sneezing or clear nasal discharge' }, severity: 'mild' },
@@ -27,7 +27,7 @@ export const SYMPTOM_CATEGORIES = [
   },
   {
     id: 'mobility',
-    icon: '🦴',
+    icon: 'bone',
     label: { es: 'Movilidad y Dolor', en: 'Mobility & Pain' },
     symptoms: [
       { id: 'limp_mild', label: { es: 'Cojera leve (apoya la pata)', en: 'Mild limp (bears some weight)' }, severity: 'mild' },
@@ -38,7 +38,7 @@ export const SYMPTOM_CATEGORIES = [
   },
   {
     id: 'skin_eyes',
-    icon: '👁️',
+    icon: 'eye',
     label: { es: 'Piel, Ojos y Oídos', en: 'Skin, Eyes & Ears' },
     symptoms: [
       { id: 'itching', label: { es: 'Rascado frecuente o enrojecimiento leve', en: 'Frequent scratching or mild redness' }, severity: 'mild' },
@@ -50,7 +50,7 @@ export const SYMPTOM_CATEGORIES = [
   },
   {
     id: 'urinary_neuro',
-    icon: '⚡',
+    icon: 'zap',
     label: { es: 'Urinario y Neurológico', en: 'Urinary & Neuro' },
     symptoms: [
       { id: 'frequent_pee', label: { es: 'Orina muchas veces en pequeñas cantidades', en: 'Frequent small urinations' }, severity: 'high' },
@@ -427,7 +427,7 @@ export const FOOD_PLANT_GUIDE = [
 export const FIRST_AID_GUIDES = [
   {
     id: 'fa_choking',
-    icon: '🫁',
+    icon: 'wind',
     title: { es: 'Atragantamiento / Asfixia', en: 'Choking / Airway Block' },
     steps: {
       es: [
@@ -446,7 +446,7 @@ export const FIRST_AID_GUIDES = [
   },
   {
     id: 'fa_heatstroke',
-    icon: '🌡️',
+    icon: 'thermometer',
     title: { es: 'Golpe de Calor', en: 'Heatstroke' },
     steps: {
       es: [
@@ -465,7 +465,7 @@ export const FIRST_AID_GUIDES = [
   },
   {
     id: 'fa_bleeding',
-    icon: '🩹',
+    icon: 'bandage',
     title: { es: 'Herida o Hemorragia Activa', en: 'Active Bleeding / Wound' },
     steps: {
       es: [
@@ -484,7 +484,7 @@ export const FIRST_AID_GUIDES = [
   },
   {
     id: 'fa_seizure',
-    icon: '⚡',
+    icon: 'zap',
     title: { es: 'Convulsión en Curso', en: 'Active Seizure' },
     steps: {
       es: [

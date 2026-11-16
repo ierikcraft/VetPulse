@@ -1,4 +1,5 @@
 import { escapeHtml } from '../state/store.js';
+import { icon } from '../utils/icons.js';
 
 function renderWeightSparkline(weights = [], lang = 'es') {
   if (!weights || weights.length < 2) {
@@ -45,6 +46,9 @@ function renderWeightSparkline(weights = [], lang = 'es') {
 function getReminderStatus(dueDate, lang) {
   const todayStr = new Date().toISOString().slice(0, 10);
   const diffDays = Math.round((new Date(dueDate) - new Date(todayStr)) / 86400000);
+  if (Number.isNaN(diffDays)) {
+    return { cls: 'ok', label: dueDate || '' };
+  }
   if (diffDays <= 0) {
     return { cls: 'due', label: lang === 'es' ? (diffDays === 0 ? 'Hoy' : 'Vencido') : (diffDays === 0 ? 'Today' : 'Overdue') };
   }
@@ -71,7 +75,8 @@ export function renderPetsView(state, activePet) {
           }</p>
         </div>
         <button type="button" id="btn-export-backup" class="btn btn-secondary" style="min-height:38px; font-size:0.84rem;" data-action="export-backup">
-          💾 ${isEs ? 'Exportar Backup JSON' : 'Export JSON Backup'}
+          ${icon('download', 16)}
+          <span>${isEs ? 'Exportar Backup JSON' : 'Export JSON Backup'}</span>
         </button>
       </div>
 
@@ -79,12 +84,14 @@ export function renderPetsView(state, activePet) {
         ${pets
           .map((pet) => {
             const isActive = pet.id === activePet.id;
+            const petIcon = pet.species === 'dog' ? icon('dog', 18) : icon('cat', 18);
             return `
               <div class="pet-card ${isActive ? 'active-pet' : ''}">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
                   <div>
-                    <div style="font-size:1.15rem; font-weight:800; font-family:var(--font-display);">
-                      ${pet.species === 'dog' ? '🐶' : '🐱'} ${escapeHtml(pet.name)}
+                    <div style="display:flex; align-items:center; gap:7px; font-size:1.15rem; font-weight:800; font-family:var(--font-display);">
+                      <span style="color:var(--primary);">${petIcon}</span>
+                      <span>${escapeHtml(pet.name)}</span>
                     </div>
                     <div style="font-size:0.84rem; color:var(--text-secondary);">
                       ${escapeHtml(pet.breed)} · ${escapeHtml(pet.ageYears)} ${isEs ? 'años' : 'yrs'} · <strong>${escapeHtml(pet.weightKg)} kg</strong>
@@ -120,7 +127,7 @@ export function renderPetsView(state, activePet) {
       </div>
 
       <div class="card">
-        <div class="card-title">⏰ ${isEs ? `Recordatorios de Cuidados (${escapeHtml(activePet.name)})` : `Care Reminders (${escapeHtml(activePet.name)})`}</div>
+        <div class="card-title">${icon('clock', 18)} <span>${isEs ? `Recordatorios de Cuidados (${escapeHtml(activePet.name)})` : `Care Reminders (${escapeHtml(activePet.name)})`}</span></div>
         ${
           reminders.length === 0
             ? `<div style="font-size:0.86rem; color:var(--text-muted); margin-bottom:12px;">${isEs ? 'No hay recordatorios aún.' : 'No reminders yet.'}</div>`
@@ -135,7 +142,8 @@ export function renderPetsView(state, activePet) {
                           <span class="rem-badge ${st.cls}">${escapeHtml(st.label)}</span>
                         </div>
                         <button type="button" class="btn btn-secondary" style="min-height:34px; padding:4px 12px; font-size:0.8rem;" data-action="complete-reminder" data-rem-id="${escapeHtml(r.id)}">
-                          ✓ ${isEs ? 'Administrado' : 'Done'}
+                          ${icon('check', 14)}
+                          <span>${isEs ? 'Administrado' : 'Done'}</span>
                         </button>
                       </div>
                     `;
@@ -151,13 +159,13 @@ export function renderPetsView(state, activePet) {
             <option value="90">${isEs ? 'Trimestral (90d)' : 'Quarterly (90d)'}</option>
             <option value="365">${isEs ? 'Anual' : 'Yearly'}</option>
           </select>
-          <button type="submit" class="btn btn-primary">${isEs ? '+ Añadir' : '+ Add'}</button>
+          <button type="submit" class="btn btn-primary">${icon('plus', 15)} <span>${isEs ? 'Añadir' : 'Add'}</span></button>
         </form>
       </div>
 
       <div class="grid-2">
         <div class="card">
-          <div class="card-title">📝 ${isEs ? `Registrar evento para ${escapeHtml(activePet.name)}` : `Log entry for ${escapeHtml(activePet.name)}`}</div>
+          <div class="card-title">${icon('clipboard', 18)} <span>${isEs ? `Registrar evento para ${escapeHtml(activePet.name)}` : `Log entry for ${escapeHtml(activePet.name)}`}</span></div>
           <form id="form-add-log" data-action="submit-log">
             <div class="grid-2">
               <div class="form-group">
@@ -170,7 +178,7 @@ export function renderPetsView(state, activePet) {
               </div>
               <div class="form-group">
                 <label class="form-label" for="log-weight">${isEs ? 'Peso (si aplica, kg)' : 'Weight (if applicable, kg)'}</label>
-                <input id="log-weight" name="weightKg" type="number" step="0.1" min="0.2" class="form-control" placeholder="${escapeHtml(activePet.weightKg)}" />
+                <input id="log-weight" name="weightKg" type="number" step="0.1" min="0.1" class="form-control" placeholder="${escapeHtml(activePet.weightKg)}" />
               </div>
             </div>
             <div class="form-group">
@@ -205,7 +213,7 @@ export function renderPetsView(state, activePet) {
         </div>
 
         <div class="card">
-          <div class="card-title">➕ ${isEs ? 'Añadir nueva mascota' : 'Add a new pet'}</div>
+          <div class="card-title">${icon('plus', 18)} <span>${isEs ? 'Añadir nueva mascota' : 'Add a new pet'}</span></div>
           <form id="form-add-pet" data-action="submit-pet">
             <div class="grid-2">
               <div class="form-group">

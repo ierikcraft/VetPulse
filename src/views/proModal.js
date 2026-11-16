@@ -1,3 +1,5 @@
+import { icon } from '../utils/icons.js';
+
 export function renderProModal(state) {
   if (!state.showProModal) return '';
   const isEs = state.lang === 'es';
@@ -9,8 +11,8 @@ export function renderProModal(state) {
           <span style="background:var(--primary-soft); color:var(--primary); font-weight:800; font-size:0.78rem; padding:4px 10px; border-radius:999px;">
             VETPULSE PRO
           </span>
-          <button type="button" id="btn-close-pro" class="btn btn-secondary" style="min-height:34px; padding:4px 10px;" data-action="close-pro" aria-label="Close">
-            ✕
+          <button type="button" id="btn-close-pro" class="btn btn-secondary" style="min-height:36px; padding:4px 10px;" data-action="close-pro" aria-label="Close">
+            ${icon('x', 16)}
           </button>
         </div>
 
@@ -23,11 +25,11 @@ export function renderProModal(state) {
             : 'Avoid unnecessary ER trips and keep your pet’s clinical history ready anytime.'}
         </p>
 
-        <ul style="margin:0 0 18px; padding-left:18px; font-size:0.9rem; color:var(--text-primary);">
-          <li style="margin-bottom:6px;">✅ ${isEs ? 'Mascotas ilimitadas y alertas de medicación' : 'Unlimited pets & medication reminders'}</li>
-          <li style="margin-bottom:6px;">✅ ${isEs ? 'Historial exportable en PDF para cualquier clínica' : 'Exportable PDF clinical history for any clinic'}</li>
-          <li style="margin-bottom:6px;">✅ ${isEs ? 'Base completa de +150 alimentos y plantas tóxicas' : 'Full database of 150+ toxic foods & plants'}</li>
-          <li>✅ ${isEs ? 'Comparador de presupuestos veterinarios por zona' : 'Local vet price benchmark comparison'}</li>
+        <ul style="margin:0 0 18px; padding-left:0; list-style:none; font-size:0.9rem; color:var(--text-primary); display:flex; flex-direction:column; gap:8px;">
+          <li style="display:flex; align-items:center; gap:8px;"><span style="color:var(--primary);">${icon('check', 16)}</span> <span>${isEs ? 'Mascotas ilimitadas y alertas de medicación' : 'Unlimited pets & medication reminders'}</span></li>
+          <li style="display:flex; align-items:center; gap:8px;"><span style="color:var(--primary);">${icon('check', 16)}</span> <span>${isEs ? 'Historial exportable en PDF para cualquier clínica' : 'Exportable PDF clinical history for any clinic'}</span></li>
+          <li style="display:flex; align-items:center; gap:8px;"><span style="color:var(--primary);">${icon('check', 16)}</span> <span>${isEs ? 'Base completa de +150 alimentos y plantas tóxicas' : 'Full database of 150+ toxic foods & plants'}</span></li>
+          <li style="display:flex; align-items:center; gap:8px;"><span style="color:var(--primary);">${icon('check', 16)}</span> <span>${isEs ? 'Comparador de presupuestos veterinarios por zona' : 'Local vet price benchmark comparison'}</span></li>
         </ul>
 
         <div style="background:var(--bg-subtle); border-radius:var(--radius-md); padding:14px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center;">
@@ -41,7 +43,7 @@ export function renderProModal(state) {
         </div>
 
         <button type="button" id="btn-activate-pro" class="btn btn-primary btn-block" data-action="activate-pro">
-          ${state.isPro ? (isEs ? '✓ Plan Pro Activo' : '✓ Pro Plan Active') : (isEs ? 'Probar 7 días gratis' : 'Start 7-Day Free Trial')}
+          ${state.isPro ? (isEs ? 'Plan Pro Activo' : 'Pro Plan Active') : (isEs ? 'Probar 7 días gratis' : 'Start 7-Day Free Trial')}
         </button>
       </div>
     </div>

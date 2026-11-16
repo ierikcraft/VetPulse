@@ -1,5 +1,6 @@
 import { COST_REGIONS, COST_SCENARIOS, estimateCost } from '../data/clinicalData.js';
 import { escapeHtml } from '../state/store.js';
+import { icon } from '../utils/icons.js';
 
 export function renderCostsView(state) {
   const { lang, costDraft } = state;
@@ -47,10 +48,12 @@ export function renderCostsView(state) {
             <label class="form-label">${isEs ? 'Tipo de clínica' : 'Clinic type'}</label>
             <div class="segmented-control">
               <button type="button" class="seg-btn ${costDraft.clinicType === 'regular' ? 'active' : ''}" data-action="set-cost-clinic" data-clinic="regular">
-                ☀️ ${isEs ? 'Diurna' : 'Daytime'}
+                ${icon('sun', 15)}
+                <span>${isEs ? 'Diurna' : 'Daytime'}</span>
               </button>
               <button type="button" id="btn-cost-er" class="seg-btn ${costDraft.clinicType === 'emergency' ? 'active' : ''}" data-action="set-cost-clinic" data-clinic="emergency">
-                🌙 ${isEs ? 'Urgencias (+65%)' : 'ER (+65%)'}
+                ${icon('moon', 15)}
+                <span>${isEs ? 'Urgencias (+65%)' : 'ER (+65%)'}</span>
               </button>
             </div>
           </div>
@@ -107,7 +110,7 @@ export function renderCostsView(state) {
 
       <div class="grid-2">
         <div class="card">
-          <div class="card-title">🛡️ ${isEs ? 'Simulador: ¿Seguro o Hucha propia?' : 'Simulator: Insurance vs. Self-Fund?'}</div>
+          <div class="card-title">${icon('shield', 18)} <span>${isEs ? 'Simulador: ¿Seguro o Hucha propia?' : 'Simulator: Insurance vs. Self-Fund?'}</span></div>
           <div class="form-group">
             <label class="form-label" for="ins-slider">
               ${isEs ? 'Presupuesto mensual:' : 'Monthly budget:'} <strong id="ins-budget-label">${est.region.currency}${monthlyBudget}/${isEs ? 'mes' : 'mo'}</strong>
@@ -124,17 +127,17 @@ export function renderCostsView(state) {
             />
           </div>
           <div style="font-size:0.88rem; color:var(--text-secondary); line-height:1.5;">
-            <div>• ${isEs ? 'Ahorro acumulado en 1 año:' : '1-year saved fund:'} <strong id="ins-yearly-display">${est.region.currency}${yearlySavings.toLocaleString()}${suffix}</strong></div>
-            <div id="ins-advice-display">• ${
+            <div>${isEs ? 'Ahorro acumulado en 1 año:' : '1-year saved fund:'} <strong id="ins-yearly-display">${est.region.currency}${yearlySavings.toLocaleString()}${suffix}</strong></div>
+            <div id="ins-advice-display">${
               yearlySavings >= avgMidCost
-                ? (isEs ? '✅ Tu hucha anual cubriría este escenario sin seguro.' : '✅ Your 1-year fund covers this scenario without insurance.')
-                : (isEs ? '⚠️ Un seguro con cobertura de urgencias evitaría pagar la diferencia de golpe.' : '⚠️ Emergency pet insurance would buffer the gap.')
+                ? (isEs ? 'Tu hucha anual cubriría este escenario sin seguro.' : 'Your 1-year fund covers this scenario without insurance.')
+                : (isEs ? 'Un seguro con cobertura de urgencias evitaría pagar la diferencia de golpe.' : 'Emergency pet insurance would buffer the gap.')
             }</div>
           </div>
         </div>
 
         <div class="card">
-          <div class="card-title">💡 ${isEs ? '3 preguntas para evitar sorpresas' : '3 questions to prevent surprise bills'}</div>
+          <div class="card-title">${icon('info', 18)} <span>${isEs ? '3 preguntas para evitar sorpresas' : '3 questions to prevent surprise bills'}</span></div>
           <ul style="margin:0; padding-left:18px; color:var(--text-secondary); font-size:0.88rem;">
             <li style="margin-bottom:5px;">${isEs ? '«¿Podemos acordar un presupuesto por escrito antes de pruebas extra?»' : '"Can we review a written estimate before extra diagnostics?"'}</li>
             <li style="margin-bottom:5px;">${isEs ? '«¿Qué pruebas son críticas hoy y cuáles opcionales?»' : '"Which tests are essential today vs. optional?"'}</li>
