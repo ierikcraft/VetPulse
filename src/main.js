@@ -127,17 +127,29 @@ function render() {
           </div>
 
           <div class="topbar-controls">
-            <div class="pet-switcher">
-              ${petIcon}
-              <select id="global-pet-select" aria-label="${escapeHtml(dict.activePet)}" data-action="switch-pet">
-                ${state.pets
-                  .map(
-                    (p) =>
-                      `<option value="${escapeHtml(p.id)}" ${p.id === activePet.id ? 'selected' : ''}>${escapeHtml(p.name)} (${escapeHtml(p.weightKg)}kg)</option>`
-                  )
-                  .join('')}
-              </select>
-            </div>
+            ${
+              state.pets.length === 0
+                ? `<button type="button" id="btn-topbar-add-pet" class="btn btn-primary" style="min-height:36px; padding:6px 13px; font-size:0.82rem; border-radius:999px;" data-action="go-add-pet">
+                    ${icon('plus', 14)}
+                    <span>${isEs ? 'Añadir mascota' : 'Add pet'}</span>
+                  </button>`
+                : `<div class="pet-switcher">
+                    ${petIcon}
+                    <select id="global-pet-select" aria-label="${escapeHtml(dict.activePet)}" data-action="switch-pet">
+                      ${state.pets
+                        .map(
+                          (p) =>
+                            `<option value="${escapeHtml(p.id)}" ${p.id === activePet.id ? 'selected' : ''}>${escapeHtml(p.name)} (${escapeHtml(p.weightKg)}kg)</option>`
+                        )
+                        .join('')}
+                      ${
+                        state.pets.length < MAX_PETS
+                          ? `<option value="__add_new__">+ ${isEs ? 'Añadir nueva mascota...' : 'Add new pet...'}</option>`
+                          : ''
+                      }
+                    </select>
+                  </div>`
+            }
 
             <button type="button" id="btn-topbar-sos" class="sos-btn" data-action="open-sos">
               ${icon('alert', 14)}
@@ -398,6 +410,13 @@ appRoot.addEventListener('click', async (e) => {
       setState({ careGuideSpecies: target.dataset.species });
       break;
     }
+    case 'go-add-pet': {
+      setState({ activeTab: 'pets' });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const nameInput = document.getElementById('pet-name');
+      if (nameInput) nameInput.focus();
+      break;
+    }
     case 'select-pet': {
       setState({
         activePetId: target.dataset.petId,
@@ -409,11 +428,10 @@ appRoot.addEventListener('click', async (e) => {
     }
     case 'delete-pet': {
       const delId = target.dataset.petId;
-      if (state.pets.length <= 1) return;
       const remaining = state.pets.filter((p) => p.id !== delId);
       setState({
         pets: remaining,
-        activePetId: state.activePetId === delId ? remaining[0].id : state.activePetId,
+        activePetId: remaining.length > 0 ? (state.activePetId === delId ? remaining[0].id : state.activePetId) : null,
       });
       showToast(isEs ? 'Mascota eliminada' : 'Pet removed');
       break;
@@ -500,12 +518,19 @@ appRoot.addEventListener('change', (e) => {
 
   switch (action) {
     case 'switch-pet':
-      setState({
-        activePetId: target.value,
-        careGuideSpecies: null,
-        triageDraft: { ...state.triageDraft, result: null },
-        toxinDraft: { ...state.toxinDraft, result: null },
-      });
+      if (target.value === '__add_new__') {
+        setState({ activeTab: 'pets' });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        const nameInput = document.getElementById('pet-name');
+        if (nameInput) nameInput.focus();
+      } else {
+        setState({
+          activePetId: target.value,
+          careGuideSpecies: null,
+          triageDraft: { ...state.triageDraft, result: null },
+          toxinDraft: { ...state.toxinDraft, result: null },
+        });
+      }
       break;
     case 'change-duration':
       setState({ triageDraft: { ...state.triageDraft, durationHours: Number(target.value) } });
@@ -584,7 +609,7 @@ appRoot.addEventListener('input', (e) => {
   }
 
   try {
-    localStorage.setItem('vetpulse_state_v2', JSON.stringify(state));
+    localStorage.setItem('vetpulse_state_v3', JSON.stringify(state));
   } catch {}
 });
 

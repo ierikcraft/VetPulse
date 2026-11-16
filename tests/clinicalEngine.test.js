@@ -5,7 +5,7 @@ import {
   evaluateToxin,
   estimateCost,
 } from '../src/data/clinicalData.js';
-import { escapeHtml } from '../src/state/store.js';
+import { escapeHtml, MAX_PETS, getDefaultState } from '../src/state/store.js';
 
 test('evaluateTriage flags red flags as emergency', () => {
   const res = evaluateTriage({
@@ -101,7 +101,6 @@ test('escapeHtml neutralizes XSS payloads', () => {
 });
 
 import { evaluateVitals, SPECIES_LIST, SPECIES_CARE_GUIDES } from '../src/data/clinicalData.js';
-import { MAX_PETS } from '../src/state/store.js';
 
 test('evaluateVitals flags blue/pale gums and high fever as critical', () => {
   const res = evaluateVitals({ species: 'dog', gums: 'blue', tempC: '40.5', rpm: '50' });
@@ -153,8 +152,9 @@ test('evaluateTriage handles bird tail bobbing and rodent wet tail as emergency'
   );
 });
 
-test('MAX_PETS is 5 and all 6 species have care guides', () => {
+test('MAX_PETS is 5, default state has 0 fake pets, and all 6 species have care guides', () => {
   assert.equal(MAX_PETS, 5);
+  assert.equal(getDefaultState().pets.length, 0);
   assert.equal(SPECIES_LIST.length, 6);
   for (const sp of SPECIES_LIST) {
     assert.ok(SPECIES_CARE_GUIDES[sp.id], `Missing care guide for ${sp.id}`);

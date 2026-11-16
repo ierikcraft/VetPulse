@@ -1,6 +1,6 @@
 // Application state & localStorage persistence
 
-const STORAGE_KEY = 'vetpulse_state_v2';
+const STORAGE_KEY = 'vetpulse_state_v3';
 export const MAX_PETS = 5;
 export const MAX_DOC_SIZE_BYTES = 1572864; // 1.5 MB per file for safe localStorage persistence
 
@@ -14,18 +14,11 @@ export function escapeHtml(str) {
 }
 
 export function getDefaultState() {
-  const today = new Date();
-  const addDays = (d) => {
-    const dt = new Date(today);
-    dt.setDate(dt.getDate() + d);
-    return dt.toISOString().slice(0, 10);
-  };
-
   return {
     lang: 'es',
     darkMode: false,
-    activeTab: 'triage',
-    activePetId: 'pet_luna',
+    activeTab: 'pets',
+    activePetId: null,
     isPro: false,
     showProModal: false,
     showEmergencyModal: false,
@@ -34,78 +27,7 @@ export function getDefaultState() {
       regularPhone: '+34 910 000 111',
       erPhone: '+34 910 000 999',
     },
-    pets: [
-      {
-        id: 'pet_luna',
-        name: 'Luna',
-        species: 'dog',
-        breed: 'Mestiza / Border Collie',
-        ageYears: 5,
-        ageGroup: 'adult',
-        weightKg: 16.5,
-        allergies: 'Pollo (sensibilidad digestiva)',
-        meds: 'Simparica Trio (mensual)',
-        weights: [
-          { date: '2026-06-01', kg: 16.0 },
-          { date: '2026-08-15', kg: 16.2 },
-          { date: '2026-10-01', kg: 16.4 },
-          { date: '2026-11-10', kg: 16.5 },
-        ],
-        logs: [
-          { id: 'log_1', date: '2026-11-10', type: 'vaccine', note: 'Vacuna polivalente anual al día' },
-          { id: 'log_2', date: '2026-10-22', type: 'symptom', note: 'Cojera leve pata trasera derecha tras correr, resuelta en 24h' },
-        ],
-        reminders: [
-          { id: 'rem_1', title: 'Simparica Trio (antiparasitario)', freqDays: 30, dueDate: addDays(3) },
-          { id: 'rem_2', title: 'Vacuna Rabia anual', freqDays: 365, dueDate: addDays(42) },
-        ],
-        vetVisits: [
-          {
-            id: 'visit_1',
-            date: '2026-11-10',
-            clinic: 'Clínica Veterinaria Central',
-            reason: 'Revisión anual y vacuna polivalente',
-            diagnosis: 'Estado general óptimo, peso estable. Próxima revisión en 1 año.',
-            cost: 55,
-          },
-        ],
-        documents: [],
-      },
-      {
-        id: 'pet_milo',
-        name: 'Milo',
-        species: 'cat',
-        breed: 'Común Europeo',
-        ageYears: 11,
-        ageGroup: 'senior',
-        weightKg: 4.8,
-        allergies: 'Ninguna conocida',
-        meds: 'Suplemento renal Semintra (diario)',
-        weights: [
-          { date: '2026-06-01', kg: 5.1 },
-          { date: '2026-08-15', kg: 5.0 },
-          { date: '2026-10-01', kg: 4.9 },
-          { date: '2026-11-10', kg: 4.8 },
-        ],
-        logs: [
-          { id: 'log_3', date: '2026-11-05', type: 'checkup', note: 'Analítica renal estable (creatinina 1.5)' },
-        ],
-        reminders: [
-          { id: 'rem_3', title: 'Semintra 1 dosis diaria', freqDays: 1, dueDate: addDays(0) },
-        ],
-        vetVisits: [
-          {
-            id: 'visit_2',
-            date: '2026-11-05',
-            clinic: 'Clínica Veterinaria Central',
-            reason: 'Control renal senior',
-            diagnosis: 'Creatinina 1.5 mg/dL estable. Mantener Semintra diario y dieta renal.',
-            cost: 85,
-          },
-        ],
-        documents: [],
-      },
-    ],
+    pets: [],
     triageDraft: {
       selectedCategory: 'digestive',
       selectedSymptoms: [],
@@ -148,6 +70,13 @@ function loadState() {
     if (!raw) return getDefaultState();
     const parsed = JSON.parse(raw);
     const defaults = getDefaultState();
+    const loadedPets = Array.isArray(parsed.pets)
+      ? parsed.pets.slice(0, MAX_PETS).map((p) => ({
+          ...p,
+          vetVisits: Array.isArray(p.vetVisits) ? p.vetVisits : [],
+          documents: Array.isArray(p.documents) ? p.documents : [],
+        }))
+      : [];
     return {
       ...defaults,
       ...parsed,
@@ -159,14 +88,8 @@ function loadState() {
       },
       toxinDraft: { ...defaults.toxinDraft, ...(parsed.toxinDraft || {}) },
       costDraft: { ...defaults.costDraft, ...(parsed.costDraft || {}) },
-      pets:
-        Array.isArray(parsed.pets) && parsed.pets.length > 0
-          ? parsed.pets.slice(0, MAX_PETS).map((p) => ({
-              ...p,
-              vetVisits: Array.isArray(p.vetVisits) ? p.vetVisits : [],
-              documents: Array.isArray(p.documents) ? p.documents : [],
-            }))
-          : defaults.pets,
+      pets: loadedPets,
+      activePetId: loadedPets.length > 0 ? (parsed.activePetId || loadedPets[0].id) : null,
     };
   } catch {
     return getDefaultState();
@@ -181,7 +104,26 @@ export function getState() {
 }
 
 export function getActivePet() {
-  return state.pets.find((p) => p.id === state.activePetId) || state.pets[0];
+  if (state.pets.length > 0) {
+    return state.pets.find((p) => p.id === state.activePetId) || state.pets[0];
+  }
+  return {
+    id: null,
+    isPlaceholder: true,
+    name: state.lang === 'es' ? 'Mi Mascota' : 'My Pet',
+    species: 'dog',
+    breed: state.lang === 'es' ? 'Sin registrar' : 'Unregistered',
+    ageYears: 3,
+    ageGroup: 'adult',
+    weightKg: 10,
+    allergies: '',
+    meds: '',
+    weights: [],
+    logs: [],
+    reminders: [],
+    vetVisits: [],
+    documents: [],
+  };
 }
 
 export function setState(updater) {

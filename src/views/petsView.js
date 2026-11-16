@@ -64,6 +64,7 @@ export function renderPetsView(state, activePet) {
   const isEs = lang === 'es';
   const reminders = activePet.reminders || [];
   const atLimit = pets.length >= MAX_PETS;
+  const hasPets = pets.length > 0;
 
   return `
     <section class="page-section" aria-labelledby="pets-heading">
@@ -77,201 +78,215 @@ export function renderPetsView(state, activePet) {
           </div>
           <p>${
             isEs
-              ? 'Hasta 5 mascotas reales (perros, gatos, conejos, aves, roedores y reptiles), peso y recordatorios.'
-              : 'Up to 5 real pets (dogs, cats, rabbits, birds, rodents, reptiles), weight, and reminders.'
+              ? 'Añade hasta 5 mascotas reales (perros, gatos, conejos, aves, roedores y reptiles), guarda documentos y visitas.'
+              : 'Add up to 5 real pets (dogs, cats, rabbits, birds, rodents, reptiles), save documents and vet visits.'
           }</p>
         </div>
-        <button type="button" id="btn-export-backup" class="btn btn-secondary" style="min-height:38px; font-size:0.84rem;" data-action="export-backup">
-          ${icon('download', 16)}
-          <span>${isEs ? 'Exportar Backup JSON' : 'Export JSON Backup'}</span>
-        </button>
-      </div>
-
-      <div class="grid-2" style="margin-bottom:18px;">
-        ${pets
-          .map((pet) => {
-            const isActive = pet.id === activePet.id;
-            const petIcon = speciesIcon(pet.species, 18);
-            const spLabel = getSpeciesLabel(pet.species, lang);
-            return `
-              <div class="pet-card ${isActive ? 'active-pet' : ''}">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
-                  <div>
-                    <div style="display:flex; align-items:center; gap:7px; font-size:1.15rem; font-weight:800; font-family:var(--font-display);">
-                      <span style="color:var(--primary);">${petIcon}</span>
-                      <span>${escapeHtml(pet.name)}</span>
-                    </div>
-                    <div style="font-size:0.84rem; color:var(--text-secondary);">
-                      ${escapeHtml(spLabel)} · ${escapeHtml(pet.breed)} · ${escapeHtml(pet.ageYears)} ${isEs ? 'años' : 'yrs'} · <strong>${escapeHtml(pet.weightKg)} kg</strong>
-                    </div>
-                  </div>
-                  ${
-                    isActive
-                      ? `<span style="background:var(--primary-soft); color:var(--primary); font-size:0.75rem; font-weight:700; padding:4px 9px; border-radius:999px;">${isEs ? 'Activa' : 'Active'}</span>`
-                      : `<button type="button" class="btn btn-secondary" style="min-height:34px; padding:4px 10px; font-size:0.8rem;" data-action="select-pet" data-pet-id="${escapeHtml(pet.id)}">${isEs ? 'Seleccionar' : 'Select'}</button>`
-                  }
-                </div>
-
-                <div style="margin-top:10px; font-size:0.84rem; color:var(--text-secondary);">
-                  <div><strong>${isEs ? 'Alergias:' : 'Allergies:'}</strong> ${escapeHtml(pet.allergies || (isEs ? 'Ninguna' : 'None'))}</div>
-                  <div><strong>${isEs ? 'Medicación:' : 'Meds:'}</strong> ${escapeHtml(pet.meds || (isEs ? 'Ninguna' : 'None'))}</div>
-                </div>
-
-                ${renderWeightSparkline(pet.weights, lang)}
-
-                ${
-                  pets.length > 1
-                    ? `<div style="margin-top:10px; text-align:right;">
-                        <button type="button" class="btn btn-danger-soft" style="min-height:32px; padding:4px 10px; font-size:0.78rem;" data-action="delete-pet" data-pet-id="${escapeHtml(pet.id)}">
-                          ${isEs ? 'Eliminar' : 'Remove'}
-                        </button>
-                      </div>`
-                    : ''
-                }
-              </div>
-            `;
-          })
-          .join('')}
-      </div>
-
-      <div class="card">
-        <div class="card-title">${icon('clock', 18)} <span>${isEs ? `Recordatorios de Cuidados (${escapeHtml(activePet.name)})` : `Care Reminders (${escapeHtml(activePet.name)})`}</span></div>
         ${
-          reminders.length === 0
-            ? `<div style="font-size:0.86rem; color:var(--text-muted); margin-bottom:12px;">${isEs ? 'No hay recordatorios aún.' : 'No reminders yet.'}</div>`
-            : `<div style="margin-bottom:14px;">
-                ${reminders
-                  .map((r) => {
-                    const st = getReminderStatus(r.dueDate, lang);
-                    return `
-                      <div class="reminder-row">
-                        <div>
-                          <div style="font-weight:600; font-size:0.92rem;">${escapeHtml(r.title)}</div>
-                          <span class="rem-badge ${st.cls}">${escapeHtml(st.label)}</span>
-                        </div>
-                        <button type="button" class="btn btn-secondary" style="min-height:34px; padding:4px 12px; font-size:0.8rem;" data-action="complete-reminder" data-rem-id="${escapeHtml(r.id)}">
-                          ${icon('check', 14)}
-                          <span>${isEs ? 'Administrado' : 'Done'}</span>
-                        </button>
-                      </div>
-                    `;
-                  })
-                  .join('')}
-              </div>`
+          hasPets
+            ? `<button type="button" id="btn-export-backup" class="btn btn-secondary" style="min-height:38px; font-size:0.84rem;" data-action="export-backup">
+                ${icon('download', 16)}
+                <span>${isEs ? 'Exportar Backup JSON' : 'Export JSON Backup'}</span>
+              </button>`
+            : ''
         }
-        <form id="form-add-reminder" data-action="submit-reminder" style="display:flex; gap:8px; flex-wrap:wrap;">
-          <input name="title" type="text" class="form-control" style="flex:2; min-width:180px;" required placeholder="${isEs ? 'Ej: Pipeta antipulgas' : 'E.g. Flea treatment'}" />
-          <select name="freqDays" class="form-control" style="flex:1; min-width:130px;">
-            <option value="1">${isEs ? 'Diario' : 'Daily'}</option>
-            <option value="30" selected>${isEs ? 'Mensual (30d)' : 'Monthly (30d)'}</option>
-            <option value="90">${isEs ? 'Trimestral (90d)' : 'Quarterly (90d)'}</option>
-            <option value="365">${isEs ? 'Anual' : 'Yearly'}</option>
-          </select>
-          <button type="submit" class="btn btn-primary">${icon('plus', 15)} <span>${isEs ? 'Añadir' : 'Add'}</span></button>
-        </form>
       </div>
 
-      <div class="grid-2">
-        <div class="card">
-          <div class="card-title">${icon('clipboard', 18)} <span>${isEs ? `Registrar evento para ${escapeHtml(activePet.name)}` : `Log entry for ${escapeHtml(activePet.name)}`}</span></div>
-          <form id="form-add-log" data-action="submit-log">
-            <div class="grid-2">
-              <div class="form-group">
-                <label class="form-label" for="log-type">${isEs ? 'Tipo' : 'Type'}</label>
-                <select id="log-type" name="type" class="form-control">
-                  <option value="weight">${isEs ? 'Nuevo peso (kg)' : 'New weight (kg)'}</option>
-                  <option value="symptom">${isEs ? 'Síntoma / Episodio' : 'Symptom / Episode'}</option>
-                  <option value="med">${isEs ? 'Medicación / Vacuna' : 'Medication / Vaccine'}</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="log-weight">${isEs ? 'Peso (si aplica, kg)' : 'Weight (if applicable, kg)'}</label>
-                <input id="log-weight" name="weightKg" type="number" step="0.1" min="0.1" class="form-control" placeholder="${escapeHtml(activePet.weightKg)}" />
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="log-note">${isEs ? 'Detalle o nota' : 'Details / note'}</label>
-              <input id="log-note" name="note" type="text" class="form-control" required placeholder="${isEs ? 'Ej: Desparasitación interna, o pesaje mensual' : 'E.g. Monthly weigh-in or deworming'}" />
-            </div>
-            <button type="submit" id="btn-save-log" class="btn btn-primary btn-block">
-              ${isEs ? 'Guardar en diario' : 'Save to diary'}
-            </button>
-          </form>
-
-          <div style="margin-top:16px;">
-            <div style="font-size:0.84rem; font-weight:700; color:var(--text-secondary); margin-bottom:8px;">
-              ${isEs ? 'Últimos registros' : 'Recent entries'}
-            </div>
-            ${
-              (activePet.logs || []).length === 0
-                ? `<div style="font-size:0.85rem; color:var(--text-muted);">${isEs ? 'Sin registros aún.' : 'No entries yet.'}</div>`
-                : (activePet.logs || [])
-                    .slice(0, 5)
-                    .map(
-                      (l) => `
-                  <div style="padding:8px 0; border-bottom:1px solid var(--border-subtle); font-size:0.86rem;">
-                    <span style="color:var(--text-muted); font-variant-numeric:tabular-nums;">${escapeHtml(l.date)}</span> —
-                    <span>${escapeHtml(l.note)}</span>
+      <div id="add-pet-card" class="card" style="border-color:var(--primary-soft-border);">
+        <div class="card-title">${icon('plus', 18)} <span>${isEs ? `Añadir nueva mascota (${pets.length}/${MAX_PETS})` : `Add a new pet (${pets.length}/${MAX_PETS})`}</span></div>
+        ${
+          atLimit
+            ? `<div id="pet-limit-notice" style="padding:14px; border-radius:var(--radius-sm); background:var(--warning-soft, rgba(245,158,11,0.12)); border:1px solid var(--border-subtle); font-size:0.9rem; color:var(--text-primary);">
+                <strong>${isEs ? 'Límite de 5 mascotas alcanzado.' : '5-pet limit reached.'}</strong>
+                <p style="margin:6px 0 0; color:var(--text-secondary);">
+                  ${isEs ? 'Elimina una mascota existente abajo si deseas añadir un perfil nuevo.' : 'Remove an existing pet below if you want to add a new profile.'}
+                </p>
+              </div>`
+            : `<form id="form-add-pet" data-action="submit-pet">
+                <div class="grid-2">
+                  <div class="form-group">
+                    <label class="form-label" for="pet-name">${isEs ? 'Nombre de tu mascota' : 'Pet name'}</label>
+                    <input id="pet-name" name="name" type="text" class="form-control" required placeholder="${isEs ? 'Ej: Coco, Kira, Tuga...' : 'E.g. Coco, Kira, Tuga...'}" />
                   </div>
-                `
-                    )
-                    .join('')
-            }
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-title">${icon('plus', 18)} <span>${isEs ? `Añadir nueva mascota (${pets.length}/${MAX_PETS})` : `Add a new pet (${pets.length}/${MAX_PETS})`}</span></div>
-          ${
-            atLimit
-              ? `<div id="pet-limit-notice" style="padding:14px; border-radius:var(--radius-sm); background:var(--warning-soft, rgba(245,158,11,0.12)); border:1px solid var(--border-subtle); font-size:0.9rem; color:var(--text-primary);">
-                  <strong>${isEs ? 'Límite de 5 mascotas alcanzado.' : '5-pet limit reached.'}</strong>
-                  <p style="margin:6px 0 0; color:var(--text-secondary);">
-                    ${isEs ? 'Elimina una mascota existente arriba si deseas añadir un perfil nuevo.' : 'Remove an existing pet above if you want to add a new profile.'}
-                  </p>
-                </div>`
-              : `<form id="form-add-pet" data-action="submit-pet">
-                  <div class="grid-2">
-                    <div class="form-group">
-                      <label class="form-label" for="pet-name">${isEs ? 'Nombre' : 'Name'}</label>
-                      <input id="pet-name" name="name" type="text" class="form-control" required placeholder="Coco" />
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label" for="pet-species">${isEs ? 'Especie' : 'Species'}</label>
-                      <select id="pet-species" name="species" class="form-control">
-                        ${SPECIES_LIST.map(
-                          (sp) => `<option value="${escapeHtml(sp.id)}">${escapeHtml(sp.label[lang])}</option>`
-                        ).join('')}
-                      </select>
-                    </div>
+                  <div class="form-group">
+                    <label class="form-label" for="pet-species">${isEs ? 'Especie / Animal' : 'Species / Animal'}</label>
+                    <select id="pet-species" name="species" class="form-control">
+                      ${SPECIES_LIST.map(
+                        (sp) => `<option value="${escapeHtml(sp.id)}">${escapeHtml(sp.label[lang])}</option>`
+                      ).join('')}
+                    </select>
                   </div>
-                  <div class="grid-2">
-                    <div class="form-group">
-                      <label class="form-label" for="pet-weight">${isEs ? 'Peso (kg)' : 'Weight (kg)'}</label>
-                      <input id="pet-weight" name="weightKg" type="number" step="0.01" min="0.02" class="form-control" required placeholder="2.5" />
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label" for="pet-age">${isEs ? 'Edad (años)' : 'Age (years)'}</label>
-                      <input id="pet-age" name="ageYears" type="number" step="1" min="0" max="60" class="form-control" required placeholder="3" />
-                    </div>
+                </div>
+                <div class="grid-3">
+                  <div class="form-group">
+                    <label class="form-label" for="pet-weight">${isEs ? 'Peso (kg)' : 'Weight (kg)'}</label>
+                    <input id="pet-weight" name="weightKg" type="number" step="0.01" min="0.02" class="form-control" required placeholder="2.5" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="pet-age">${isEs ? 'Edad (años)' : 'Age (years)'}</label>
+                    <input id="pet-age" name="ageYears" type="number" step="1" min="0" max="60" class="form-control" required placeholder="3" />
                   </div>
                   <div class="form-group">
                     <label class="form-label" for="pet-breed">${isEs ? 'Raza / Variedad' : 'Breed / Variety'}</label>
-                    <input id="pet-breed" name="breed" type="text" class="form-control" placeholder="${isEs ? 'Belier, Agapornis, Cobaya, Tortuga rusa...' : 'Lop, Lovebird, Guinea Pig, Tortoise...'}" />
+                    <input id="pet-breed" name="breed" type="text" class="form-control" placeholder="${isEs ? 'Belier, Agapornis, Mestizo...' : 'Lop, Lovebird, Mixed...'}" />
                   </div>
-                  <div class="form-group">
-                    <label class="form-label" for="pet-allergies">${isEs ? 'Alergias o condiciones' : 'Allergies or chronic conditions'}</label>
-                    <input id="pet-allergies" name="allergies" type="text" class="form-control" placeholder="${isEs ? 'Opcional' : 'Optional'}" />
-                  </div>
-                  <button type="submit" id="btn-create-pet" class="btn btn-primary btn-block">
-                    ${isEs ? 'Crear perfil de mascota' : 'Create pet profile'}
-                  </button>
-                </form>`
-          }
-        </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="pet-allergies">${isEs ? 'Alergias o condiciones médicas' : 'Allergies or chronic conditions'}</label>
+                  <input id="pet-allergies" name="allergies" type="text" class="form-control" placeholder="${isEs ? 'Opcional' : 'Optional'}" />
+                </div>
+                <button type="submit" id="btn-create-pet" class="btn btn-primary btn-block">
+                  ${icon('plus', 16)}
+                  <span>${isEs ? 'Crear perfil de mascota' : 'Create pet profile'}</span>
+                </button>
+              </form>`
+        }
       </div>
 
-      ${renderVetVisitsAndDocs(activePet, lang)}
+      ${
+        !hasPets
+          ? `<div class="card" style="text-align:center; padding:28px 20px;">
+              <div style="color:var(--primary); margin-bottom:8px;">${icon('paw', 28)}</div>
+              <h2 style="font-size:1.1rem; margin-bottom:6px;">${isEs ? 'Aún no has añadido ninguna mascota' : 'You haven’t added any pets yet'}</h2>
+              <p style="margin:0; font-size:0.9rem; color:var(--text-secondary);">
+                ${isEs ? 'Rellena el formulario de arriba para registrar tu primera mascota real y activar su diario, recordatorios, visitas y documentos.' : 'Fill out the form above to register your first real pet and unlock their diary, reminders, vet visits, and documents.'}
+              </p>
+            </div>`
+          : `
+            <div class="grid-2" style="margin-bottom:18px;">
+              ${pets
+                .map((pet) => {
+                  const isActive = pet.id === activePet.id;
+                  const petIcon = speciesIcon(pet.species, 18);
+                  const spLabel = getSpeciesLabel(pet.species, lang);
+                  return `
+                    <div class="pet-card ${isActive ? 'active-pet' : ''}">
+                      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+                        <div>
+                          <div style="display:flex; align-items:center; gap:7px; font-size:1.15rem; font-weight:800; font-family:var(--font-display);">
+                            <span style="color:var(--primary);">${petIcon}</span>
+                            <span>${escapeHtml(pet.name)}</span>
+                          </div>
+                          <div style="font-size:0.84rem; color:var(--text-secondary);">
+                            ${escapeHtml(spLabel)} · ${escapeHtml(pet.breed)} · ${escapeHtml(pet.ageYears)} ${isEs ? 'años' : 'yrs'} · <strong>${escapeHtml(pet.weightKg)} kg</strong>
+                          </div>
+                        </div>
+                        ${
+                          isActive
+                            ? `<span style="background:var(--primary-soft); color:var(--primary); font-size:0.75rem; font-weight:700; padding:4px 9px; border-radius:999px;">${isEs ? 'Activa' : 'Active'}</span>`
+                            : `<button type="button" class="btn btn-secondary" style="min-height:34px; padding:4px 10px; font-size:0.8rem;" data-action="select-pet" data-pet-id="${escapeHtml(pet.id)}">${isEs ? 'Seleccionar' : 'Select'}</button>`
+                        }
+                      </div>
+
+                      <div style="margin-top:10px; font-size:0.84rem; color:var(--text-secondary);">
+                        <div><strong>${isEs ? 'Alergias:' : 'Allergies:'}</strong> ${escapeHtml(pet.allergies || (isEs ? 'Ninguna' : 'None'))}</div>
+                        <div><strong>${isEs ? 'Medicación:' : 'Meds:'}</strong> ${escapeHtml(pet.meds || (isEs ? 'Ninguna' : 'None'))}</div>
+                      </div>
+
+                      ${renderWeightSparkline(pet.weights, lang)}
+
+                      <div style="margin-top:10px; text-align:right;">
+                        <button type="button" class="btn btn-danger-soft" style="min-height:32px; padding:4px 10px; font-size:0.78rem;" data-action="delete-pet" data-pet-id="${escapeHtml(pet.id)}">
+                          ${icon('trash', 13)}
+                          <span>${isEs ? 'Eliminar' : 'Remove'}</span>
+                        </button>
+                      </div>
+                    </div>
+                  `;
+                })
+                .join('')}
+            </div>
+
+            <div class="grid-2">
+              <div class="card">
+                <div class="card-title">${icon('clock', 18)} <span>${isEs ? `Recordatorios de Cuidados (${escapeHtml(activePet.name)})` : `Care Reminders (${escapeHtml(activePet.name)})`}</span></div>
+                ${
+                  reminders.length === 0
+                    ? `<div style="font-size:0.86rem; color:var(--text-muted); margin-bottom:12px;">${isEs ? 'No hay recordatorios aún.' : 'No reminders yet.'}</div>`
+                    : `<div style="margin-bottom:14px;">
+                        ${reminders
+                          .map((r) => {
+                            const st = getReminderStatus(r.dueDate, lang);
+                            return `
+                              <div class="reminder-row">
+                                <div>
+                                  <div style="font-weight:600; font-size:0.92rem;">${escapeHtml(r.title)}</div>
+                                  <span class="rem-badge ${st.cls}">${escapeHtml(st.label)}</span>
+                                </div>
+                                <button type="button" class="btn btn-secondary" style="min-height:34px; padding:4px 12px; font-size:0.8rem;" data-action="complete-reminder" data-rem-id="${escapeHtml(r.id)}">
+                                  ${icon('check', 14)}
+                                  <span>${isEs ? 'Administrado' : 'Done'}</span>
+                                </button>
+                              </div>
+                            `;
+                          })
+                          .join('')}
+                      </div>`
+                }
+                <form id="form-add-reminder" data-action="submit-reminder" style="display:flex; gap:8px; flex-wrap:wrap;">
+                  <input name="title" type="text" class="form-control" style="flex:2; min-width:160px;" required placeholder="${isEs ? 'Ej: Pipeta antipulgas' : 'E.g. Flea treatment'}" />
+                  <select name="freqDays" class="form-control" style="flex:1; min-width:120px;">
+                    <option value="1">${isEs ? 'Diario' : 'Daily'}</option>
+                    <option value="30" selected>${isEs ? 'Mensual (30d)' : 'Monthly (30d)'}</option>
+                    <option value="90">${isEs ? 'Trimestral (90d)' : 'Quarterly (90d)'}</option>
+                    <option value="365">${isEs ? 'Anual' : 'Yearly'}</option>
+                  </select>
+                  <button type="submit" class="btn btn-primary">${icon('plus', 15)} <span>${isEs ? 'Añadir' : 'Add'}</span></button>
+                </form>
+              </div>
+
+              <div class="card">
+                <div class="card-title">${icon('clipboard', 18)} <span>${isEs ? `Registrar evento para ${escapeHtml(activePet.name)}` : `Log entry for ${escapeHtml(activePet.name)}`}</span></div>
+                <form id="form-add-log" data-action="submit-log">
+                  <div class="grid-2">
+                    <div class="form-group">
+                      <label class="form-label" for="log-type">${isEs ? 'Tipo' : 'Type'}</label>
+                      <select id="log-type" name="type" class="form-control">
+                        <option value="weight">${isEs ? 'Nuevo peso (kg)' : 'New weight (kg)'}</option>
+                        <option value="symptom">${isEs ? 'Síntoma / Episodio' : 'Symptom / Episode'}</option>
+                        <option value="med">${isEs ? 'Medicación / Vacuna' : 'Medication / Vaccine'}</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" for="log-weight">${isEs ? 'Peso (si aplica, kg)' : 'Weight (if applicable, kg)'}</label>
+                      <input id="log-weight" name="weightKg" type="number" step="0.01" min="0.02" class="form-control" placeholder="${escapeHtml(activePet.weightKg)}" />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="log-note">${isEs ? 'Detalle o nota' : 'Details / note'}</label>
+                    <input id="log-note" name="note" type="text" class="form-control" required placeholder="${isEs ? 'Ej: Desparasitación interna, o pesaje mensual' : 'E.g. Monthly weigh-in or deworming'}" />
+                  </div>
+                  <button type="submit" id="btn-save-log" class="btn btn-primary btn-block">
+                    ${isEs ? 'Guardar en diario' : 'Save to diary'}
+                  </button>
+                </form>
+
+                <div style="margin-top:16px;">
+                  <div style="font-size:0.84rem; font-weight:700; color:var(--text-secondary); margin-bottom:8px;">
+                    ${isEs ? 'Últimos registros' : 'Recent entries'}
+                  </div>
+                  ${
+                    (activePet.logs || []).length === 0
+                      ? `<div style="font-size:0.85rem; color:var(--text-muted);">${isEs ? 'Sin registros aún.' : 'No entries yet.'}</div>`
+                      : (activePet.logs || [])
+                          .slice(0, 5)
+                          .map(
+                            (l) => `
+                        <div style="padding:8px 0; border-bottom:1px solid var(--border-subtle); font-size:0.86rem;">
+                          <span style="color:var(--text-muted); font-variant-numeric:tabular-nums;">${escapeHtml(l.date)}</span> —
+                          <span>${escapeHtml(l.note)}</span>
+                        </div>
+                      `
+                          )
+                          .join('')
+                  }
+                </div>
+              </div>
+            </div>
+
+            ${renderVetVisitsAndDocs(activePet, lang)}
+          `
+      }
     </section>
   `;
 }

@@ -20,20 +20,34 @@ export function renderTriageView(state, activePet) {
         <div>
           <div style="display:flex; align-items:center; gap:6px; font-size:0.8rem; font-weight:700; color:var(--primary); text-transform:uppercase; letter-spacing:0.04em;">
             ${petIcon}
-            <span>${escapeHtml(activePet.name)} · ${escapeHtml(spLabel)} · ${escapeHtml(activePet.weightKg)} kg · ${escapeHtml(activePet.ageYears)} ${isEs ? 'años' : 'yrs'}</span>
+            <span>${
+              activePet.isPlaceholder
+                ? (isEs ? 'Ninguna mascota registrada aún' : 'No pet registered yet')
+                : `${escapeHtml(activePet.name)} · ${escapeHtml(spLabel)} · ${escapeHtml(activePet.weightKg)} kg · ${escapeHtml(activePet.ageYears)} ${isEs ? 'años' : 'yrs'}`
+            }</span>
           </div>
           <div style="display:flex; align-items:center; gap:6px; font-size:0.86rem; color:var(--text-secondary); margin-top:3px;">
             ${icon('clock', 14)}
             <span>
               ${
-                nextRem
-                  ? `${isEs ? 'Próximo cuidado:' : 'Next care:'} <strong>${escapeHtml(nextRem.title)}</strong> (${escapeHtml(nextRem.dueDate)})`
-                  : (isEs ? 'Sin recordatorios pendientes' : 'No pending reminders')
+                activePet.isPlaceholder
+                  ? (isEs ? 'Añade tu mascota real para personalizar el triaje y guardar su historial' : 'Add your real pet to personalize triage and save history')
+                  : nextRem
+                    ? `${isEs ? 'Próximo cuidado:' : 'Next care:'} <strong>${escapeHtml(nextRem.title)}</strong> (${escapeHtml(nextRem.dueDate)})`
+                    : (isEs ? 'Sin recordatorios pendientes' : 'No pending reminders')
               }
             </span>
           </div>
         </div>
         <div class="quick-actions-row">
+          ${
+            activePet.isPlaceholder
+              ? `<button type="button" class="btn btn-primary" style="min-height:38px; padding:6px 12px; font-size:0.82rem;" data-action="go-add-pet">
+                  ${icon('plus', 15)}
+                  <span>${isEs ? 'Añadir mi mascota' : 'Add my pet'}</span>
+                </button>`
+              : ''
+          }
           <button type="button" class="btn btn-secondary" style="min-height:38px; padding:6px 12px; font-size:0.82rem;" data-action="nav" data-tab="toxins">
             ${icon('flask', 15)}
             <span>${isEs ? '¿Comió algo tóxico?' : 'Ate something toxic?'}</span>
