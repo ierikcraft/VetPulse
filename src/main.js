@@ -13,6 +13,7 @@ import {
   setState,
   subscribe,
   escapeHtml,
+  resetAllData,
   MAX_PETS,
   MAX_DOC_SIZE_BYTES,
 } from './state/store.js';
@@ -125,6 +126,16 @@ function render() {
                   : (isEs ? 'Historial PDF, alertas y +150 tóxicos.' : 'PDF history, alerts & 150+ toxins.')
               }
             </div>
+          </button>
+          <button
+            type="button"
+            id="btn-sidebar-reset"
+            class="btn btn-danger-soft btn-block"
+            style="margin-top:8px; min-height:36px; font-size:0.78rem; padding:6px 10px;"
+            data-action="open-reset-confirm"
+          >
+            ${icon('trash', 14)}
+            <span>${isEs ? 'Borrar todos los datos' : 'Erase all data'}</span>
           </button>
         </div>
       </aside>
@@ -449,6 +460,21 @@ appRoot.addEventListener('click', async (e) => {
         triageDraft: { ...state.triageDraft, result: null },
         toxinDraft: { ...state.toxinDraft, result: null },
       });
+      break;
+    }
+    case 'open-reset-confirm': {
+      setState({ activeTab: 'pets', showResetConfirm: true });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      break;
+    }
+    case 'cancel-reset-all': {
+      setState({ showResetConfirm: false });
+      break;
+    }
+    case 'confirm-reset-all': {
+      resetAllData();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      showToast(isEs ? 'Todos los datos han sido borrados' : 'All data has been erased');
       break;
     }
     case 'delete-pet': {

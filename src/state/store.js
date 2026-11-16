@@ -147,6 +147,11 @@ export function subscribe(fn) {
 }
 
 export function resetAllData() {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem('vetpulse_state_v2');
+    localStorage.removeItem('vetpulse_state_v1');
+  } catch {}
   const fresh = getDefaultState();
   fresh.lang = state.lang;
   fresh.darkMode = state.darkMode;

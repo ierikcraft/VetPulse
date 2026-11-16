@@ -82,15 +82,48 @@ export function renderPetsView(state, activePet) {
               : 'Add up to 5 real pets (dogs, cats, rabbits, birds, rodents, reptiles), save documents and vet visits.'
           }</p>
         </div>
-        ${
-          hasPets
-            ? `<button type="button" id="btn-export-backup" class="btn btn-secondary" style="min-height:38px; font-size:0.84rem;" data-action="export-backup">
-                ${icon('download', 16)}
-                <span>${isEs ? 'Exportar Backup JSON' : 'Export JSON Backup'}</span>
-              </button>`
-            : ''
-        }
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          ${
+            hasPets
+              ? `<button type="button" id="btn-export-backup" class="btn btn-secondary" style="min-height:38px; font-size:0.84rem;" data-action="export-backup">
+                  ${icon('download', 16)}
+                  <span>${isEs ? 'Exportar Backup JSON' : 'Export JSON Backup'}</span>
+                </button>`
+              : ''
+          }
+          <button type="button" id="btn-reset-all-data" class="btn btn-danger-soft" style="min-height:38px; font-size:0.84rem;" data-action="open-reset-confirm">
+            ${icon('trash', 15)}
+            <span>${isEs ? 'Borrar todos los datos' : 'Erase all data'}</span>
+          </button>
+        </div>
       </div>
+
+      ${
+        state.showResetConfirm
+          ? `<div id="reset-confirm-banner" class="card" style="background:var(--emergency-bg); border-color:var(--emergency-border);">
+              <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+                <div>
+                  <strong style="color:var(--emergency-text); display:flex; align-items:center; gap:6px; font-size:0.96rem;">
+                    ${icon('alert', 16)}
+                    <span>${isEs ? '¿Seguro que quieres borrar todos los datos?' : 'Are you sure you want to erase all data?'}</span>
+                  </strong>
+                  <p style="margin:4px 0 0; font-size:0.86rem; color:var(--text-secondary);">
+                    ${isEs ? 'Se eliminarán todas las mascotas, historial, visitas, documentos y volverás a la pantalla de configuración inicial.' : 'All pets, logs, vet visits, and documents will be deleted and the app will return to initial setup.'}
+                  </p>
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                  <button type="button" id="btn-confirm-reset-all" class="btn" style="background:var(--emergency-solid); color:#fff; min-height:38px; font-size:0.84rem;" data-action="confirm-reset-all">
+                    ${icon('trash', 14)}
+                    <span>${isEs ? 'Sí, borrar todo' : 'Yes, erase everything'}</span>
+                  </button>
+                  <button type="button" id="btn-cancel-reset-all" class="btn btn-secondary" style="min-height:38px; font-size:0.84rem;" data-action="cancel-reset-all">
+                    <span>${isEs ? 'Cancelar' : 'Cancel'}</span>
+                  </button>
+                </div>
+              </div>
+            </div>`
+          : ''
+      }
 
       <div id="add-pet-card" class="card" style="border-color:var(--primary-soft-border);">
         <div class="card-title">${icon('plus', 18)} <span>${isEs ? `Añadir nueva mascota (${pets.length}/${MAX_PETS})` : `Add a new pet (${pets.length}/${MAX_PETS})`}</span></div>
