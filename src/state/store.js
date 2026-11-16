@@ -161,7 +161,7 @@ function loadState() {
       costDraft: { ...defaults.costDraft, ...(parsed.costDraft || {}) },
       pets:
         Array.isArray(parsed.pets) && parsed.pets.length > 0
-          ? parsed.pets.map((p) => ({
+          ? parsed.pets.slice(0, MAX_PETS).map((p) => ({
               ...p,
               vetVisits: Array.isArray(p.vetVisits) ? p.vetVisits : [],
               documents: Array.isArray(p.documents) ? p.documents : [],

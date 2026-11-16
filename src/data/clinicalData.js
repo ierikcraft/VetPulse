@@ -327,9 +327,19 @@ export const GUM_COLORS = [
   { id: 'yellow', color: '#EAB308', label: { es: 'Amarillas (Ictericia / Hígado)', en: 'Yellow (Jaundice / Liver)' }, status: 'high' },
 ];
 
+const SPECIES_VITALS_THRESHOLDS = {
+  dog: { tempMin: 37.7, tempMax: 39.3, tempCritLow: 37.0, tempCritHigh: 40.0, rpmHigh: 35, rpmCrit: 45, tempLabel: '38.0–39.2°C', rpmLabel: '<30' },
+  cat: { tempMin: 37.7, tempMax: 39.3, tempCritLow: 37.0, tempCritHigh: 40.0, rpmHigh: 35, rpmCrit: 45, tempLabel: '38.0–39.2°C', rpmLabel: '<30' },
+  rabbit: { tempMin: 38.2, tempMax: 40.1, tempCritLow: 37.5, tempCritHigh: 40.8, rpmHigh: 65, rpmCrit: 85, tempLabel: '38.5–40.0°C', rpmLabel: '30–60' },
+  bird: { tempMin: 39.5, tempMax: 42.2, tempCritLow: 38.5, tempCritHigh: 43.0, rpmHigh: 65, rpmCrit: 85, tempLabel: '40.0–42.0°C', rpmLabel: '40–60' },
+  rodent: { tempMin: 37.0, tempMax: 39.6, tempCritLow: 36.2, tempCritHigh: 40.5, rpmHigh: 115, rpmCrit: 140, tempLabel: '37.2–39.5°C', rpmLabel: '60–110' },
+  reptile: { tempMin: 22.0, tempMax: 34.0, tempCritLow: 18.0, tempCritHigh: 38.0, rpmHigh: 18, rpmCrit: 28, tempLabel: '24–32°C', rpmLabel: '4–12' },
+};
+
 export function evaluateVitals({ species = 'dog', gums = 'pink', tempC = '', rpm = '' }) {
   const alerts = [];
   let maxSeverity = 'normal';
+  const vt = SPECIES_VITALS_THRESHOLDS[species] || SPECIES_VITALS_THRESHOLDS.dog;
 
   const gumObj = GUM_COLORS.find((g) => g.id === gums);
   if (gumObj && gumObj.status === 'critical') {
@@ -342,22 +352,21 @@ export function evaluateVitals({ species = 'dog', gums = 'pink', tempC = '', rpm
 
   const t = parseFloat(tempC);
   if (Number.isFinite(t) && t > 0) {
-    if (t >= 40.0 || t < 37.0) {
+    if (t >= vt.tempCritHigh || t < vt.tempCritLow) {
       maxSeverity = 'critical';
       alerts.push({ es: `Temperatura crítica (${t}°C): riesgo de golpe de calor, sepsis o hipotermia.`, en: `Critical temperature (${t}°C): risk of heatstroke, sepsis, or hypothermia.` });
-    } else if (t > 39.3 || t < 37.7) {
+    } else if (t > vt.tempMax || t < vt.tempMin) {
       if (maxSeverity === 'normal') maxSeverity = 'high';
-      alerts.push({ es: `Temperatura alterada (${t}°C). Normal: 38.0–39.2°C.`, en: `Abnormal temperature (${t}°C). Normal: 38.0–39.2°C.` });
+      alerts.push({ es: `Temperatura alterada (${t}°C). Normal: ${vt.tempLabel}.`, en: `Abnormal temperature (${t}°C). Normal: ${vt.tempLabel}.` });
     }
   }
 
   const r = parseFloat(rpm);
   if (Number.isFinite(r) && r > 0) {
-    const limit = species === 'cat' ? 35 : 35;
-    if (r >= 45) {
+    if (r >= vt.rpmCrit) {
       maxSeverity = 'critical';
-      alerts.push({ es: `Respiración en reposo muy elevada (${r} rpm). Normal <30 rpm.`, en: `Very high resting respiratory rate (${r} rpm). Normal <30 rpm.` });
-    } else if (r > limit) {
+      alerts.push({ es: `Respiración en reposo muy elevada (${r} rpm). Normal ${vt.rpmLabel} rpm.`, en: `Very high resting respiratory rate (${r} rpm). Normal ${vt.rpmLabel} rpm.` });
+    } else if (r > vt.rpmHigh) {
       if (maxSeverity === 'normal') maxSeverity = 'high';
       alerts.push({ es: `Respiración en reposo algo rápida (${r} rpm). Vigilar de cerca.`, en: `Slightly elevated resting breathing (${r} rpm). Monitor closely.` });
     }

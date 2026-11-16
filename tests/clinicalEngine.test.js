@@ -161,3 +161,10 @@ test('MAX_PETS is 5 and all 6 species have care guides', () => {
     assert.ok(SPECIES_CARE_GUIDES[sp.id].conditions.length >= 2);
   }
 });
+
+test('evaluateVitals uses species-specific normal ranges for rabbit, bird, and reptile', () => {
+  assert.equal(evaluateVitals({ species: 'rabbit', gums: 'pink', tempC: '39.6', rpm: '48' }).maxSeverity, 'normal');
+  assert.equal(evaluateVitals({ species: 'bird', gums: 'pink', tempC: '41.0', rpm: '50' }).maxSeverity, 'normal');
+  assert.equal(evaluateVitals({ species: 'reptile', gums: 'pink', tempC: '28.0', rpm: '8' }).maxSeverity, 'normal');
+  assert.equal(evaluateVitals({ species: 'reptile', gums: 'pink', tempC: '28.0', rpm: '22' }).maxSeverity, 'high');
+});

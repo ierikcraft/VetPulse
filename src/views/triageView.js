@@ -159,7 +159,7 @@ export function renderTriageView(state, activePet) {
                       value="${escapeHtml(vitals.rpm)}"
                       data-action="change-vitals-rpm"
                     />
-                    <span style="font-size:0.78rem; color:var(--text-muted);">${isEs ? 'Normal <30' : 'Normal <30'}</span>
+                    <span style="font-size:0.78rem; color:var(--text-muted);">${isEs ? 'Normal' : 'Normal'} ${escapeHtml((SPECIES_LIST.find((s) => s.id === activePet.species) || SPECIES_LIST[0]).normalRpm)}</span>
                   </div>
                   <button type="button" id="btn-tap-rpm" class="tap-pulse-btn" data-action="tap-rpm">
                     ${icon('wind', 15)}
@@ -169,15 +169,15 @@ export function renderTriageView(state, activePet) {
               </div>
 
               <div class="form-group" style="margin-bottom:0;">
-                <label class="form-label" for="vitals-temp">${isEs ? 'Temperatura rectal (°C, opcional)' : 'Rectal Temp (°C, optional)'}</label>
+                <label class="form-label" for="vitals-temp">${isEs ? 'Temperatura (°C, opcional)' : 'Temp (°C, optional)'}</label>
                 <input
                   id="vitals-temp"
                   type="number"
                   step="0.1"
-                  min="34"
-                  max="43"
+                  min="15"
+                  max="44"
                   class="form-control"
-                  placeholder="38.5 (Normal 38.0–39.2)"
+                  placeholder="Normal ${escapeHtml((SPECIES_LIST.find((s) => s.id === activePet.species) || SPECIES_LIST[0]).normalTemp)}"
                   value="${escapeHtml(vitals.tempC)}"
                   data-action="change-vitals-temp"
                 />
